@@ -1,120 +1,138 @@
 <?php defined('SYSPATH') or die('No direct script access.');
+
+require_once __DIR__ . '/../../vendor/autoload.php';
+
+
+use Symfony\Component\Mailer\Mailer;
+use Symfony\Component\Mailer\Transport;
+use Symfony\Component\Mime\Email as SymfonyEmail;
+use Symfony\Component\Mime\Address;
+
 /**
- * Email helper class.
- *
- * $Id: email.php 1970 2008-02-06 21:54:29Z Shadowhand $
- *
- * @package    Email Helper
- * @author     Kohana Team
- * @copyright  (c) 2007-2008 Kohana Team
- * @license    http://kohanaphp.com/license.html
+ * Email helper class (PHP 8 compatible, Symfony Mailer)
  */
-class email {
+class email
+{
+	protected static ?Mailer $mailer = null;
 
-	// SwiftMailer instance
-	protected static $mail;
-
-	/**
-	 * Creates a SwiftMailer instance.
-	 *
-	 * @param   string  DSN connection string
-	 * @return  object  Swift object
-	 */
-	public static function connect($config = NULL)
+	protected static function getMailer(): Mailer
 	{
-		if ( ! class_exists('Swift', FALSE))
-		{
-			// Load SwiftMailer
-			require_once Kohana::find_file('vendor', 'swift/Swift');
-
-			// Register the Swift ClassLoader as an autoload
-			spl_autoload_register(array('Swift_ClassLoader', 'load'));
+		if (self::$mailer !== null) {
+			return self::$mailer;
 		}
 
-		$email_driver = Settings::get('email_driver');
+		$host = Settings::get('email_hostname');
+		$port = (int)Settings::get('email_port');
+		$user = Settings::get('email_username');
+		$pass = Settings::get('email_password');
+		$enc  = Settings::get('email_encryption'); // 'ssl', 'tls', ''
 
-		switch ($email_driver)
-		{
-			case 'smtp':
+		$dsnUser = rawurlencode((string)$user);
+		$dsnPass = rawurlencode((string)$pass);
 
-				$conn_encryption = null;
-
-				switch (Settings::get('email_encryption')) {
-					case 'tsl':
-						$conn_encryption = Swift_Connection_SMTP::ENC_TLS;
-						break;
-					case 'ssl':
-						$conn_encryption = Swift_Connection_SMTP::ENC_SSL;
-						break;
-				}
-
-				// Create a SMTP connection
-				$connection = new Swift_Connection_SMTP
-				(
-					Settings::get('email_hostname'),
-					Settings::get('email_port'),
-					$conn_encryption
-				);
-
-				// Do authentication, if part of the DSN
-				(Settings::get('email_username')=='') or $connection->setUsername(Settings::get('email_username'));
-				(Settings::get('email_password')=='') or $connection->setPassword(Settings::get('email_password'));
-
-				// Set the timeout to 5 seconds
-				$connection->setTimeout(15);
-			break;
-			case 'sendmail':
-				// Create a sendmail connection
-				$connection = new Swift_Connection_Sendmail
-				(
-					/**
-					 * @todo Add config settings to email with sendmail
-					 */
-					//empty($config['options']) ? Swift_Connection_Sendmail::AUTO_DETECT : $config['options']
-					Swift_Connection_Sendmail::AUTO_DETECT
-				);
-
-				// Set the timeout to 5 seconds
-				$connection->setTimeout(15);
-			break;
-			default:
-				// Use the native connection
-				$connection = new Swift_Connection_NativeMail;
-			break;
+		if ($port === 465 || $enc === 'ssl') {
+			// SMTPS
+			$dsn = sprintf(
+				'smtps://%s:%s@%s:%d',
+				$dsnUser,
+				$dsnPass,
+				$host,
+				$port
+			);
+		} else {
+			// SMTP + STARTTLS
+			$dsn = sprintf(
+				'smtp://%s:%s@%s:%d?encryption=tls',
+				$dsnUser,
+				$dsnPass,
+				$host,
+				$port
+			);
 		}
 
-		// Create the SwiftMailer instance
-		return self::$mail = new Swift($connection);
+		$transport = Transport::fromDsn($dsn);
+		self::$mailer = new Mailer($transport);
+
+		return self::$mailer;
 	}
 
 	/**
 	 * Send an email message.
 	 *
-	 * @param   string|array  recipient email (and name)
-	 * @param   string|array  sender email (and name)
-	 * @param   string        message subject
-	 * @param   string        message body
-	 * @param   boolean       send email as HTML
-	 * @return  integer       number of emails sent
+	 * @param string|array $to
+	 * @param string|array $from
+	 * @param string       $subject
+	 * @param string       $message
+	 * @param bool         $html
+	 * @return int
 	 */
-	public static function send($to, $from, $subject, $message, $html = FALSE)
+	public static function send($to, $from, $subject, $message, $html = false): int
 	{
-		// Connect to SwiftMailer
-		(self::$mail === NULL) and email::connect();
+		$mailer = self::getMailer();
 
-		// Determine the message type
-		$html = ($html === TRUE) ? 'text/html' : 'text/plain';
+		$email = new SymfonyEmail();
 
-		// Create the message
-		$message = new Swift_Message($subject, $message, $html, '8bit', 'utf-8');
+		// FROM
+		if (is_array($from)) {
+			$email->from(new Address($from[0], $from[1] ?? ''));
+		} else {
+			$email->from($from);
+		}
 
-		// Make a personalized From: address
-		$to = is_array($to) ? new Swift_Address($to[0], $to[1]) : new Swift_Address($to);
+		// TO
+		if (is_array($to)) {
+			$email->to(new Address($to[0], $to[1] ?? ''));
+		} else {
+			$email->to($to);
+		}
 
-		// Make a personalized From: address
-		$from = is_array($from) ? new Swift_Address($from[0], $from[1]) : new Swift_Address($from);
+		$email->subject($subject);
 
-		return self::$mail->send($message, $to, $from);
+		if ($html) {
+			$email->html($message);
+		} else {
+			$email->text($message);
+		}
+
+		$mailer->send($email);
+
+		// zachováme návratovou hodnotu jako u Swiftu
+		return 1;
 	}
 
-} // End email
+	public static function connect($config = null)
+	{
+		return self::getMailer();
+	}
+
+	public static function send_full(
+		string $to,
+		string $from,
+		string $subject,
+		string $htmlBody,
+		array $bcc = [],
+		array $attachments = []
+	): void {
+		$mailer = self::getMailer();
+
+		$m = new SymfonyEmail();
+		$m->from($from)
+			->to($to)
+			->subject($subject)
+			->html($htmlBody);
+
+		foreach ($bcc as $b) {
+			$m->addBcc($b);
+		}
+
+		foreach ($attachments as $a) {
+			$m->attachFromPath(
+				$a['path'],
+				$a['name'] ?? null,
+				$a['mime'] ?? null
+			);
+		}
+
+		$mailer->send($m);
+	}
+}

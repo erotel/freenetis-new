@@ -1019,50 +1019,32 @@ class Scheduler_Controller extends Controller
 			return;
 		}
 
-		$swift = email::connect();
-
 		foreach ($email_queue as $email) {
 			try {
-				// Recipients
-				$recipients = new Swift_RecipientList;
-				$recipients->addTo($email->to);
+				$bcc = [];
 
 				if (strpos($email->subject, 'Oznámení o přijaté platbě') !== FALSE) {
-					$recipients->addBcc('ucdokl@pvfree.net');
+					$bcc[] = 'ucdokl@pvfree.net';
 				}
 				if (strpos($email->subject, 'Ukončení členství s přeplatkem') !== FALSE) {
-					$recipients->addBcc('rada@pvfree.net');
-					$recipients->addBcc('pokladnik@pvfree.net');
+					$bcc[] = 'rada@pvfree.net';
+					$bcc[] = 'pokladnik@pvfree.net';
 				}
 				if (strpos($email->subject, 'Ukončení členství podle Stanov') !== FALSE) {
-					$recipients->addBcc('rada@pvfree.net');
+					$bcc[] = 'rada@pvfree.net';
 				}
 				if (strpos($email->subject, 'Ukončení členství na vlastní žádost') !== FALSE) {
-					$recipients->addBcc('rada@pvfree.net');
+					$bcc[] = 'rada@pvfree.net';
 				}
 				if (strpos($email->subject, 'Oznámení o započetí přerušení členství') !== FALSE) {
-					$recipients->addBcc('rada@pvfree.net');
+					$bcc[] = 'rada@pvfree.net';
 				}
-
 				if (strpos($email->subject, 'Faktura ') === 0) {
-					$recipients->addBcc('ucdokl@pvfree.net');
+					$bcc[] = 'ucdokl@pvfree.net';
 				}
 
-
-				// Message
-				$message = new Swift_Message($email->subject);
-
-				$bodyHtml = (string)$email->body;
-				$bodyText = trim(strip_tags($bodyHtml));
-				if ($bodyText === '') {
-					$bodyText = ' ';
-				}
-
-				// Swift 3: TEXT primary, HTML alternative
-				$message->setBody($bodyText, 'text/plain', 'utf-8');
-				$message->addChild(new Swift_Message_Part($bodyHtml, 'text/html', 'utf-8'));
-
-				// Attachments
+				// === přílohy ===
+				$attachments = [];
 				$atts = $email_queue_model->get_attachments($email->id);
 
 				foreach ($atts as $a) {
@@ -1072,29 +1054,28 @@ class Scheduler_Controller extends Controller
 					if ($real === FALSE || strpos($real, $base . DIRECTORY_SEPARATOR) !== 0) {
 						throw new Exception('Attachment path not allowed: ' . $a->path);
 					}
-
 					if (!is_readable($real)) {
 						throw new Exception('Attachment not readable: ' . $real);
 					}
 
-					$name = $a->name ?: basename($real);
-					$mime = $a->mime ?: 'application/octet-stream';
-
-					$message->attach(
-						new Swift_Message_Attachment(
-							file_get_contents($real),
-							$name,
-							$mime
-						)
-					);
+					$attachments[] = [
+						'path' => $real,
+						'name' => $a->name ?: basename($real),
+						'mime' => $a->mime ?: 'application/octet-stream',
+					];
 				}
 
-				// Send
-				if (Config::get('unit_tester') || $swift->send($message, $recipients, $email->from)) {
-					$email->state = Email_queue_Model::STATE_OK;
-				} else {
-					$email->state = Email_queue_Model::STATE_FAIL;
-				}
+				// === SEND ===
+				email::send_full(
+					$email->to,
+					$email->from,
+					$email->subject,
+					(string)$email->body,
+					$bcc,
+					$attachments
+				);
+
+				$email->state = Email_queue_Model::STATE_OK;
 			} catch (Exception $e) {
 				$email->state = Email_queue_Model::STATE_FAIL;
 				Log::add('error', 'Email queue id ' . $email->id . ': ' . $e->getMessage());
@@ -1102,8 +1083,6 @@ class Scheduler_Controller extends Controller
 
 			$email->save();
 		}
-
-		$swift->disconnect();
 	}
 
 

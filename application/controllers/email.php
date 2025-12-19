@@ -27,19 +27,20 @@ class Email_Controller extends Controller
 	public function __construct()
 	{
 		parent::__construct();
-		
+
 		if (!module::e('email'))
-			Controller::error (ACCESS);
+			Controller::error(ACCESS);
 	}
-	
+
 	/**
 	 * Shows email form
 	 */
 	public function index()
 	{
-		if ($this->input->post('address') == NULL ||
-			$this->input->post('email_member_id') == NULL)
-		{
+		if (
+			$this->input->post('address') == NULL ||
+			$this->input->post('email_member_id') == NULL
+		) {
 			Controller::warning(PARAMETER);
 		}
 
@@ -48,7 +49,7 @@ class Email_Controller extends Controller
 		$te->setHeight(480);
 		$te->setFieldName('editor');
 		$te->setContent(
-				($this->input->post('editor') == NULL)
+			($this->input->post('editor') == NULL)
 				? '' : $this->input->post('editor')
 		);
 
@@ -69,50 +70,35 @@ class Email_Controller extends Controller
 	 */
 	public function send()
 	{
-		if ($this->input->post('email_from') == NULL ||
+		if (
+			$this->input->post('email_from') == NULL ||
 			$this->input->post('email_to') == NULL ||
-			$this->input->post('email_member_id') == NULL)
-		{
+			$this->input->post('email_member_id') == NULL
+		) {
 			Controller::warning(PARAMETER);
 		}
 
-		// Use connect() method to load Swiftmailer and connect
-		// using the parameters set in the email config file
-		$swift = email::connect();
+		try {
+			$from = $this->input->post('email_from');
+			$to = $this->input->post('email_to');
+			$subject = 'FreenetIS - ' . $this->input->post('subject');
+			$body = '<html><body>' . $this->input->post('editor') . '</body></html>';
 
-		// From, subject and HTML message
-		$from = $this->input->post('email_from');
-		$subject = 'FreenetIS - ' . $this->input->post('subject');
+			email::send(
+				$to,
+				$from,
+				$subject,
+				$body,
+				true
+			);
 
-		$message = '<html><body>' . $this->input->post('editor') . '</body></html>';
-		// Build recipient lists
-		$recipients = new Swift_RecipientList;
-		$recipients->addTo($this->input->post('email_to'));
-
-		// Build the HTML message
-		$message = new Swift_Message($subject, $message, "text/html");
-
-		if ($swift->send($message, $recipients, $from))
-		{
 			url::redirect('members/show/' . $this->input->post('email_member_id'));
+		} catch (Exception $e) {
+			Log::add('error', 'Email send failed: ' . $e->getMessage());
+			Controller::error(EMAIL);
 		}
-		else
-		{
-			$content = form::open(url_lang::base() . 'email');
-			$content.= form::hidden('email_member_id', $this->input->post('email_member_id'));
-			$content.= form::hidden('address', $this->input->post('email_to'));
-			$content.= form::hidden('email_from', $this->input->post('email_from'));
-			$content.= form::hidden('subject', $this->input->post('subject'));
-			$content.= form::hidden('editor', $this->input->post('editor'));
-			$content.= form::submit('submit', __('Back'), 'class="submit"');
-			$content.= form::close();
-
-			Controller::error(EMAIL, $content);
-		}
-
-		// Disconnect
-		$swift->disconnect();
 	}
+
 
 	/**
 	 * Send email to developers wia AJAX.
@@ -136,60 +122,63 @@ class Email_Controller extends Controller
 		$line = @$_POST['line'];
 		$file = @$_POST['file'];
 		$ename = @$_POST['ename'];
-		
-		if (!valid::email($email))
-		{
+
+		if (!valid::email($email)) {
 			// Redirect
 			status::error('Wrong email filled in!');
 			url::redirect(url::base());
 		}
-		
+
 		// Use connect() method to load Swiftmailer and connect using the 
 		// parameters set in the email config file
-		$swift = email::connect();
+
 
 		$fn_version = '-';
-		
-		if (defined('FREENETIS_VERSION'))
-		{
+
+		if (defined('FREENETIS_VERSION')) {
 			$fn_version = FREENETIS_VERSION;
 		}
-		
+
 		// Build content
 		$subject = __('FreenetIS bug report: ' . (empty($ename) ? $url : $ename));
 		$message_body = nl2br($description);
 		$attachment = '<html><body>' .
-				'<h1>' . __('Bug report from') . ": . $url (file: $file, line: $line)</h1>" .
-				'<p>FreenetIS ' . __('version') . ': ' . $fn_version . '</p>' .
-				'<p>PHP ' . __('version') . ': ' . phpversion() . '</p>' .
-				'<p>' . __('Reported by') . ': ' . $uname . '</p>' .
-				'<p>' . __('Description') . ': ' . nl2br($description) . '</p>' .
-				'<h2>' . $error . '</h2>' .
-				'<p>' . htmlspecialchars_decode($edescription) . '</p>' .
-				'<p class="message">' . htmlspecialchars_decode($message) . '</p>' .
-				'<p class="detail">' . htmlspecialchars_decode($detail) . '</p>' .
-				'<div>' . htmlspecialchars_decode($trace) . '</div>' .
-				'</body></html>';
+			'<h1>' . __('Bug report from') . ": . $url (file: $file, line: $line)</h1>" .
+			'<p>FreenetIS ' . __('version') . ': ' . $fn_version . '</p>' .
+			'<p>PHP ' . __('version') . ': ' . phpversion() . '</p>' .
+			'<p>' . __('Reported by') . ': ' . $uname . '</p>' .
+			'<p>' . __('Description') . ': ' . nl2br($description) . '</p>' .
+			'<h2>' . $error . '</h2>' .
+			'<p>' . htmlspecialchars_decode($edescription) . '</p>' .
+			'<p class="message">' . htmlspecialchars_decode($message) . '</p>' .
+			'<p class="detail">' . htmlspecialchars_decode($detail) . '</p>' .
+			'<div>' . htmlspecialchars_decode($trace) . '</div>' .
+			'</body></html>';
 		$attachment = text::cs_utf2ascii($attachment);
-		
+
 		// Build recipient lists
-		$recipients = new Swift_RecipientList;
-		$recipients->addTo(DEVELOPER_EMAIL_ADDRESS);
+		email::send_full(
+			DEVELOPER_EMAIL_ADDRESS,
+			$email,
+			$subject,
+			$attachment,
+			[],
+			[
+				[
+					'path' => $tmp = tempnam(sys_get_temp_dir(), 'bug_'),
+					'name' => 'log.html',
+					'mime' => 'text/html'
+				]
+			]
+		);
+		file_put_contents($tmp, $attachment);
 
-		// Build the HTML message
-		$message = new Swift_Message($subject);
-		$message->attach(new Swift_Message_Part($message_body));
-		$message->attach(new Swift_Message_Attachment($attachment, 'log.html', 'text/html'));
-
-		// Send
-		$swift->send($message, $recipients, $email);
-		$swift->disconnect();
 
 		// Redirect
 		status::success('Thank you for your error report');
 		url::redirect(url::base());
 	}
-	
+
 	/**
 	 * This function show message in database
 	 * 
@@ -199,39 +188,36 @@ class Email_Controller extends Controller
 	public function show($email_id = null)
 	{
 		// access
-		if (!$this->acl_check_view('Email_queues_Controller', 'email_queue'))
-		{
+		if (!$this->acl_check_view('Email_queues_Controller', 'email_queue')) {
 			Controller::error(ACCESS);
 		}
-		
-	    if (!isset($email_id))
-		{
+
+		if (!isset($email_id)) {
 			Controller::warning(PARAMETER);
 		}
 
 		$email = new Email_queue_Model($email_id);
 
-	    if (!$email || !$email->id)
-		{
+		if (!$email || !$email->id) {
 			Controller::error(RECORD);
 		}
 
 		$email_info = $email->from . ' &rarr; ' . $email->to . ' (' . $email->access_time . ')';
-		
+
 		$breadcrumbs = breadcrumbs::add()
-				->link('email_queues', 'E-mails')
-				->disable_translation()
-				->text($email_info);
-	    
-	    $view = new View('main');
-	    $view->title = __('Show e-mail message');
-	    $view->content = new View('email/show');
+			->link('email_queues', 'E-mails')
+			->disable_translation()
+			->text($email_info);
+
+		$view = new View('main');
+		$view->title = __('Show e-mail message');
+		$view->content = new View('email/show');
 		$view->breadcrumbs = $breadcrumbs->html();
-	    $view->content->headline = __('e-mail message');
-	    $view->content->email = $email;
-	    $view->render(true);
+		$view->content->headline = __('e-mail message');
+		$view->content->email = $email;
+		$view->render(true);
 	}
-	
+
 	/**
 	 * Callback for state of SMS message
 	 *
@@ -240,16 +226,11 @@ class Email_Controller extends Controller
 	 */
 	protected static function state($item, $name)
 	{
-		if ($item->state == Email_queue_Model::STATE_OK)
-		{
+		if ($item->state == Email_queue_Model::STATE_OK) {
 			echo '<div style="color:green;">' . __('Sent') . '</div>';
-		}
-		elseif ($item->state == Email_queue_Model::STATE_NEW)
-		{
+		} elseif ($item->state == Email_queue_Model::STATE_NEW) {
 			echo '<div style="color:grey;">' . __('Unsent') . '</div>';
-		}
-		elseif ($item->state == Email_queue_Model::STATE_FAIL)
-		{
+		} elseif ($item->state == Email_queue_Model::STATE_FAIL) {
 			echo '<b style="color:red;">' . __('Failed') . '</b>';
 		}
 	}

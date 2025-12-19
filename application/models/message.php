@@ -948,7 +948,7 @@ class Message_Model extends ORM
 		}
 		
 		// empty message
-		if (trim($message->text) == '')
+		if (trim($message->text??'') == '')
 		{
 			return 0;
 		}
