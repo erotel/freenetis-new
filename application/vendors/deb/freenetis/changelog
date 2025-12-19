@@ -1,0 +1,307 @@
+freenetis (1.1.28) stable; urgency=low
+  * Fix DEB package on Debian Wheezy
+-- Ondrej Fibich <ondrej.fibich@gmail.com>  Wed, 02 Jul 2025 01:51:34 +0200
+
+freenetis (1.1.27) stable; urgency=low
+  * New CSV API FIO parser.
+  * FIO API - new URL support.
+  * Improve error message and status check for bank statement imports downloaded
+    from a HTTP service.
+  * Fix removal of active logs if no record is present for a day.
+-- Ondrej Fibich <ondrej.fibich@gmail.com>  Mon, 18 Nov 2024 08:04:21 +0100
+
+freenetis (1.1.26) stable; urgency=low
+  * Support for import of Raiffeisenbank XML statement
+  * Support Debian Buster
+  * SNMP Linux driver supports some Huawei switches
+  * Fix user transfer to a different member
+  * Fix invalid payment notification activation on fee recalculation
+  * Fix slow loading of Mapy.cz in offline mode
+  * Fix installation on PHP 7.3 or higher
+  * Fix database connection on PHP 7.2 and higher
+  * Fix roaming link adding on PHP 7.3 or higher
+  * Fix work adding on PHP 7.3 or higher
+  * Fix work report on PHP 7.3 or higher
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Fri, 31 Jan 2020 00:14:30 +0100
+
+freenetis (1.1.25) stable; urgency=low
+  * Add support for subnet CIDR 31
+  * Fix links to works/requests/work reports from user account on Stretch
+  * Fixes presence of whitelisted members in notification e-mail report message
+  * Fix map preview display in member popup window
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Thu, 09 May 2019 20:35:49 +0200
+
+freenetis (1.1.24) stable; urgency=hight
+  * Fix scheduler failure on Debian 8 and higher
+  * Drop support for Debian 5 (Lenny)
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Sat, 05 Jan 2019 23:10:02 +0100
+
+freenetis (1.1.23) stable; urgency=low
+  * Support for Debian 9 (Stretch)
+  * Big debtor notification message
+  * E-mail reports of notification message activations with list of affected
+  * Fix map support by using Mapy.cz (maps) and OSM Nominativ (GPS lookup)
+  * Fix setup on Wheezy
+  * Fix order of options in filter fields with selectbox
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Fri, 28 Dec 2018 10:25:25 +0100
+
+freenetis (1.1.22) stable; urgency=low
+  * GDPR: Former members older than 5 years can be deleted
+  * Member registration field can be set during adding
+  * User birthday can be non-mandatory item
+  * Fix getting MAC from DHCP leases through SNMP on RouterOS 6.35>=
+  * Fix payed to calculation if deduct day is set to 28th
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Wed, 13 Jun 2018 22:41:16 +0200
+
+freenetis (1.1.21) stable; urgency=low
+  * Add support for SMTP servers with encryption
+  * Fix RB importer in PHP 5.6 >=
+  * Fix removing of user with set watchers
+  * Fix member export with speed class filter set
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Fri, 26 May 2017 05:59:28 +0200
+
+freenetis (1.1.20) stable; urgency=low
+  * Web interface: unallowed_ip_addresses improved: filter by message type added
+  * Improves performance of email queue
+  * Fix Tatra banka importer for total balance higher than 999
+  * Fix Tatra banka importer when no new payment received via e-mail listing
+  * GPS position of address points is now stored compatibly with MySQL 5.7
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Thu, 02 Feb 2017 17:48:22 +0100
+
+freenetis (1.1.19) stable; urgency=low
+  * Fix some issues in PHP 7.0
+  * Fix issue in system setting during country saving
+  * Improves Tatra banka importer
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Thu, 08 Sep 2016 23:49:04 +0200
+
+freenetis (1.1.18) stable; urgency=low
+  * Fix members export to CSV with whitelist filter
+  * Activation of notification for a single member when redirection disabled
+  * Fix access right in member grid for account show
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Tue, 24 May 2016 22:44:09 +0200
+
+freenetis (1.1.17) stable; urgency=low
+  * Support for new gateway of Klikniavolej.cz SMS driver
+  * Better HTTPS encryption settings in DEB package
+  * Fixes in work reports approval
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Fri, 25 Mar 2016 13:51:37 +0100
+
+freenetis (1.1.16) stable; urgency=low
+  * Adds "added by" filter to members table
+  * Improves forgotten password mail message text
+  * Fixes authorization vulnerability in mail send form
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Thu, 12 Nov 2015 20:47:08 +0100
+
+freenetis (1.1.15) stable; urgency=hight
+  * Fix reactivation of notification messages for members with old whitelist
+  * Fix allowing of empty e-mail suffix in the e-mail notification
+  * Allow to disable notification message name in e-mail notification subject
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Wed, 28 Oct 2015 20:54:54 +0100
+
+freenetis (1.1.14) stable; urgency=hight
+  * Fix DEB postinst script for Jessie
+  * Remove GIT files from DEB
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Wed, 14 Oct 2015 00:00:06 +0200
+
+freenetis (1.1.13) stable; urgency=low
+  * Improved setting PHP info formatting on PHP 5.6 and higher
+  * Fix escaping of '<' in SMS notification message
+  * Fix error in member edit form - change of engineer changes address as well
+  * Fix ordering of notification messages for ID and name column
+  * Fix bug in fulltext search for members without street
+  * Fix destination account showing if origin account is empty in transfer show
+  * Fix creating of rule for auto import of back statements when notification
+    module disabled
+  * Adds Tatra banka bank type
+  * Adds e-mail import for Tatra banka statements with auto-import rules
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Sun, 11 Oct 2015 09:24:58 +0200
+
+freenetis (1.1.12) stable; urgency=hight
+  * Support for new lbilling NFX VoIP API
+  * Fix hybrid method issue on PHP 5.6 (Jessie)
+  * Fix sorting by type in the table of members
+  * Added validator for disabling filling dot in database name during setup
+  * VoIP settings fix that allows to not fill leaved numbers
+  * Fix the device form state change on a device template add through pop-up
+  * Filter for bank account owner in bank account table
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Thu, 04 Jun 2015 22:08:34 +0200
+
+freenetis (1.1.11) stable; urgency=hight
+  * Double-entry transfer may be added to 684000 account by user
+  * Improved double-entry account lists in forms that allows to add new transfer
+  * New filter for member ID in users and member interrupts grids
+  * Fix win1250 encoding issue in CSV export
+  * Fix DEB package dependency to CRON and locales
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Fri, 15 May 2015 19:39:51 +0200
+
+freenetis (1.1.10) stable; urgency=hight
+  * New configuration option that allows duplicates in phone and e-mail contacts
+  * New variable symbol generator that generates member ID
+  * Member table displays member interrupt info in member type column
+  * New form for editing of bank account that is not owned by association
+  * New form for assigning of unidentified transfer to any account
+  * Member ID is displayed in membership interrupt table in member column
+  * Fixes of members fee recalculation if deduct day is last day in month
+  * Fixes issue with hidden bank accounts that do not have owner
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Thu, 16 Apr 2015 22:45:27 +0200
+
+freenetis (1.1.9) stable; urgency=hight
+  * Fix release of invalid DEB package
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Tue, 03 Mar 2015 18:18:18 +0100
+
+freenetis (1.1.8) stable; urgency=hight
+  * Fix release
+  * Fixes #956: Add fee fix if it ends in '9999-12-31'
+  * Fixes #960: Cannot set default allow subnets count
+  * Fixes #962: Allow subnets count not set during self-registration of member
+  * Fixes #963: Export to PDF in PHP 5.5
+  * Fixes #964: Link to request in user profile
+  * Fixes #966: Sorting in transfers
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Tue, 03 Mar 2015 17:18:18 +0100
+
+freenetis (1.1.7) stable; urgency=low
+  * Fix release
+  * Fixes #895: Notification activation for members filtered by stored query
+  * Fixes #913: Fulltext search weights fix for important results
+  * Fixes #917: Count of IP addresses in IP grid
+  * Fixes #918: Monitoring activation for filtered devices
+  * Closes #953: Support for deposit payment by cash removed from FIO importer
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Thu, 29 Jan 2015 17:27:11 +0100
+
+freenetis (1.1.6) stable; urgency=hight
+  * Fix release
+  * Fixes #894: Member name length limitation extended
+  * Fixes #899: Invalid prefilled value in link dialog
+  * Fixes #900: Possibility to add existing wireless interface to air link
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Wed, 19 Mar 2014 23:19:06 +0100
+
+freenetis (1.1.5) stable; urgency=hight
+  * Fix release
+  * Fixes #885: Unidentified payments filter
+  * Fixes #893: Pre-fill of form for approving of a connection request
+  * Implements #882: Determining of MAC from RB/Linux in hybrid networks
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Tue, 04 Mar 2014 23:29:40 +0100
+
+freenetis (1.1.4) stable; urgency=hight
+  * Fix release
+  * Fixes #880: Fixes filter initialization due to forgotten JS debug
+  * Fixes #881: Filter initialization if field has no class
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Tue, 11 Feb 2014 15:12:02 +0100
+
+freenetis (1.1.3) stable; urgency=hight
+  * Fix release
+  * Fixes #876: Fixes clearing of filter form values after filter sending
+  * Fixes #877: Bank account settings change breaks bank statement import
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Thu, 06 Feb 2014 13:15:29 +0100
+
+freenetis (1.1.2) stable; urgency=hight
+  * Fix release
+  * Fixes #868: member statistics on no filtered results
+  * Fixes #869: datepicker in SMS messages date filter
+  * Fixes #871: dialog loading in IE7
+  * Fixes #873: invalid rebuilding of filter
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Tue, 04 Feb 2014 22:21:11 +0100
+
+freenetis (1.1.1) stable; urgency=hight
+  * Fix release (#862: Activation of user notification message)
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Fri, 24 Jan 2014 18:45:31 +0100
+
+freenetis (1.1.0) stable; urgency=low
+  * First stable version of 1.1
+  * Key features: <http://www.freenetis.org/freenetis-1-1-key-features>
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Fri, 17 Jan 2014 11:10:21 +0100
+
+freenetis (1.0.12) stable; urgency=hight
+  * Fix release
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Tue, 09 Jul 2013 15:12:00 +0100
+
+freenetis (1.0.11) stable; urgency=hight
+  * Fix release (#684)
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Tue, 09 Jul 2013 15:08:00 +0100
+
+freenetis (1.0.10) stable; urgency=hight
+  * Fix release (#36, #615)
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Tue, 09 Jul 2013 14:37:00 +0100
+
+freenetis (1.0.9) stable; urgency=hight
+  * Fix release (#488, #508, #569)
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Fri, 06 Jun 2013 14:06:00 +0100
+
+freenetis (1.0.8) stable; urgency=hight
+  * Fix release (#454, #470, #460)
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Mon, 21 Jan 2013 11:52:00 +0100
+
+freenetis (1.0.7) stable; urgency=hight
+  * Fix release (#416, #436, #445, #452)
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Wed, 16 Jan 2013 19:09:56 +0100
+
+freenetis (1.0.6) stable; urgency=hight
+  * Fix release (#358, #443)
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Thu, 03 Jan 2013 17:41:28 +0100
+
+freenetis (1.0.5) stable; urgency=hight
+  * Fix release (#254, #294, #396, #399, #402, #409, #410)
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Wed, 31 Oct 2012 00:35:25 +0100
+
+freenetis (1.0.4) stable; urgency=hight
+  * Fix release (#366, #367, #373, #374, #376, #377, #378, #380, #383, #384)
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Thu, 27 Sep 2012 21:24:48 +0200
+
+freenetis (1.0.3) stable; urgency=hight
+  * Fix release (#363, #355, #358, #362, #361)
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Tue, 18 Sep 2012 19:33:24 +0200
+
+freenetis (1.0.2) stable; urgency=hight
+  * Fix release (#336, #334, #331, #329, #325, #324, #321, #320, #297)
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Sat, 15 Sep 2012 09:01:17 +0200
+
+freenetis (1.0.1) stable; urgency=hight
+  * Fix release (#296, #298, #299, #305, #309, #310)
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Tue, 28 Aug 2012 09:28:44 +0200
+
+freenetis (1.0.0) stable; urgency=hight
+  * Official release 1.0.0
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Thu, 23 Aug 2012 10:37:46 +0200
+
+freenetis (1.0.0~rc13) unstable; urgency=low
+  * Restrict local installation (#289)
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Tue, 21 Aug 2012 08:37:46 +0200
+
+freenetis (1.0.0~rc7) unstable; urgency=low
+  * Changes in interface of ifaces
+  * Several bug fixes
+  * Fixes dependencies
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Mon, 13 Aug 2012 11:19:41 +0200
+
+freenetis (1.0.0~rc6) unstable; urgency=low
+  * Added support for redirection and server aliases in apache config (#246)
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Mon, 06 Aug 2012 15:49:56 +0200
+
+freenetis (1.0.0~rc1) unstable; urgency=low
+  * First official RC release
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Fri, 03 Aug 2012 16:43:44 +0200
+
+freenetis (1.0.0~beta7) unstable; urgency=low
+  * Support for monitoring package
+  * Device templates import/export functionality
+  * Several bug fixes
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Thu, 02 Aug 2012 16:02:42 +0200
+
+freenetis (1.0.0~beta6) unstable; urgency=low
+  * Improvements in DEB package
+  * Improvements in installation
+  * Several bug fixes
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Thu, 02 Aug 2012 16:02:42 +0200
+
+freenetis (1.0.0~beta5) unstable; urgency=low
+  * Added new mechanism for database upgrades and version system (#146)
+  * Several bug fixes
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Wed, 01 Aug 2012 17:05:25 +0200
+
+freenetis (1.0.0~beta2) unstable; urgency=low
+  * Second official beta release - all functionality included in this release
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Tue, 31 Jul 2012 12:54:59 +0200
+
+freenetis (1.0.0~beta1) unstable; urgency=low
+  * First official beta release
+ -- Ondrej Fibich <ondrej.fibich@gmail.com>  Tue, 26 Jun 2012 21:28:47 +0200

@@ -1,0 +1,26 @@
+stages:
+  - test
+  - deploy
+
+deb_package_check:
+  image: debian:jessie
+  script: tests/deb_package_check.sh
+  before_script:
+    - sed -i 's/deb.debian.org/archive.debian.org/g;s|security.debian.org|archive.debian.org/|g;/jessie-updates/d' /etc/apt/sources.list
+    - apt-get update -q
+    - apt-get install -q -y --force-yes --no-install-recommends --no-install-suggests fakeroot lintian
+  stage: test
+  tags:
+    - deb_check
+  only:
+    - tags
+    - master
+    - develop
+
+deb_package_deploy_master_tag:
+  script: "~/ci-scripts/freenetis/freenetis/deb_package_deploy_master.sh"
+  stage: deploy
+  tags:
+    - deb_repository
+  only:
+    - tags

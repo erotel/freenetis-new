@@ -1,0 +1,13 @@
+<?php defined('SYSPATH') or die('No direct script access.');
+
+$config['db_name'] = 'freenetis';
+
+$config['db_host'] = 'localhost';
+
+$config['db_user'] = 'freenetis';
+
+$config['db_password'] = 'freenetis';
+
+$config['protocol'] = 'http';
+
+$config['log_threshold'] = 1;
