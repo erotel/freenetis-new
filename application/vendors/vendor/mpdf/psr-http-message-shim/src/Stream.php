@@ -1,6 +1,6 @@
 <?php
 
-namespace Mpdf\Http;
+namespace Mpdf\PsrHttpMessageShim;
 
 /**
  * @link nyholm/psr7

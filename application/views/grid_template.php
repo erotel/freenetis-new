@@ -236,7 +236,7 @@
 					echo $field->input->html();
 			}
 			// empty field
-			elseif (trim($item->$field) == '')
+			elseif (trim($item->$field ?? '') == '')
 			{
 				echo '&nbsp;';
 			}

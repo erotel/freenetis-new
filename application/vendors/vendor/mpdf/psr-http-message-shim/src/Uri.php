@@ -1,6 +1,6 @@
 <?php
 
-namespace Mpdf\Http;
+namespace Mpdf\PsrHttpMessageShim;
 
 /**
  * PSR-7 URI implementation ported from nyholm/psr7 and adapted for PHP 5.6

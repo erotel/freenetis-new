@@ -24,6 +24,10 @@ class Members_Controller extends Controller
 	/** @var integer $_member_id	Member ID for callbacks */
 	protected $_member_id = false;
 
+	/** @var Member_Model|null */
+	public $member = NULL;
+
+
 	/**
 	 * Function redirects default member address to show_all function.
 	 * 
@@ -4267,7 +4271,7 @@ class Members_Controller extends Controller
 
 		if (file_exists($logo)) {
 			$page .= '<div style="float:left; width: 50%">' .
-				 '<img src="' . url_lang::base() . 'export/logo" width=274 height=101>' .
+				'<img src="' . url_lang::base() . 'export/logo" width=274 height=101>' .
 				'</div>';
 		} else	//if logo doesn't exist, insert only blank div
 		{

@@ -405,7 +405,7 @@ class text {
 	 */
 	public static function starts_with($str, $start)
 	{
-		return strncmp($str, $start, mb_strlen($start)) == 0;
+		return strncmp($str ?? '', $start ?? '', mb_strlen($start ?? '')) == 0;
 	}
 	
 	/**

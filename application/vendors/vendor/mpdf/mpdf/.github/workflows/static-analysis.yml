@@ -1,25 +1,27 @@
 # https://help.github.com/en/categories/automating-your-workflow-with-github-actions
 
-name: "Code coverage"
+name: "Static Analysis check"
 
 on:
+  pull_request:
   push:
     branches:
+      - "master"
       - "development"
-      - "coverage"
+      - "test"
 
 jobs:
 
-  coverage:
+  stan:
 
-    name: "Code coverage"
+    name: "Static Analysis check"
 
     runs-on: ${{ matrix.operating-system }}
 
     strategy:
       matrix:
         php-version:
-          - "7.4"
+          - "8.2"
 
         operating-system: [ubuntu-latest]
 
@@ -30,13 +32,13 @@ jobs:
       - name: "Install PHP"
         uses: "shivammathur/setup-php@v2"
         with:
-          coverage: "xdebug"
+          coverage: "none"
           php-version: "${{ matrix.php-version }}"
-          extensions: "mbstring, gd, bcmath, bz2"
+          extensions: "mbstring"
           tools: composer:v2
 
       - name: "Install dependencies"
-        run: "composer install --no-interaction --no-progress"
+        run: "composer install --no-interaction --no-progress && composer require \"phpstan/phpstan:^2.0\""
 
-      - name: "Code coverage"
-        run: composer coverage
+      - name: "Static Analysis check"
+        run: vendor/bin/phpstan --no-progress

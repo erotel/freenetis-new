@@ -30,56 +30,79 @@ class Field
 	 * @var string 
 	 */
 	public $label;
-	
+
+	public $label_suffix = '';
+	public $label_prefix = '';
+	public $label_class = '';
+	public $label_style = '';
+	public $label_help = '';
+	public $label_help_class = '';
+	public $label_help_style = '';
+	public $label_help_suffix = '';
+	public $label_help_prefix = '';
+	public $label_tooltip = '';
+	public $label_tooltip_class = '';
+	public $label_tooltip_style = '';
+	public $label_tooltip_suffix = '';
+	public $label_tooltip_prefix = '';
+	public $label_tooltip_help = '';
+	public $label_tooltip_help_class = '';
+	public $label_tooltip_help_style = '';
+	public $label_tooltip_help_suffix = '';
+	public $label_tooltip_help_prefix = '';
+	public $label_tooltip_help_tooltip = '';
+	public $type;
+	public $link;
+
 	/**
 	 * Name
 	 *
 	 * @var string 
 	 */
 	public $name;
-	
+
 	/**
 	 * Bool
 	 *
 	 * @var bool 
 	 */
 	public $bool;
-	
+
 	/**
 	 * Class
 	 *
 	 * @var string 
 	 */
 	public $class;
-	
+
 	/**
 	 * Order
 	 *
 	 * @var bool
 	 */
 	public $order = true;
-	
+
 	/**
 	 * Style
 	 *
 	 * @var string 
 	 */
 	public $style;
-	
+
 	/**
 	 * Help hint
 	 *
 	 * @var string 
 	 */
 	public $help;
-	
+
 	/**
 	 * Args
 	 *
 	 * @var array 
 	 */
 	public $args;
-	
+
 	/**
 	 * Contruct of field, set label by its name with auto internationalization
 	 *
@@ -90,7 +113,7 @@ class Field
 		$this->name = $name;
 		$this->label = __(inflector::humanize($name), '', 2);
 	}
-	
+
 	/**
 	 * Call method (sets properties)
 	 *
@@ -99,13 +122,13 @@ class Field
 	 * @return Field
 	 */
 	public function __call($method, $args)
-	{	
+	{
 		$this->$method = array_shift($args);
 		$this->args[$method] = $args;
-		
+
 		return $this;
 	}
-	
+
 	/**
 	 * Sets label of field
 	 *
@@ -115,18 +138,15 @@ class Field
 	public function label($label)
 	{
 		// is there any HTML tag in label?
-		if (preg_match("/<.*>/", $label))
-		{
+		if (preg_match("/<.*>/", $label)) {
 			$this->label = $label;
-		}
-		else
-		{
+		} else {
 			$this->label = __($label);
 		}
-		
+
 		return $this;
 	}
-	
+
 	/**
 	 * Render field
 	 *
@@ -134,9 +154,9 @@ class Field
 	 */
 	public function render()
 	{
-		return '<strong>'.ucfirst($this->label).'</strong>';
+		return '<strong>' . ucfirst($this->label) . '</strong>';
 	}
-	
+
 	/**
 	 * Render field
 	 *

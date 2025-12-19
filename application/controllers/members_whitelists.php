@@ -21,7 +21,11 @@ class Members_whitelists_Controller extends Controller
 	// help variables for callback
 	private $pom_member_id = NULL;
 	private $members_whitelist_id = NULL;
+	public $member = NULL;
+	public $template = 'main';
+	public $auto_render = TRUE;
 	
+
 	/**
 	 * Only enable if notification enabled
 	 */

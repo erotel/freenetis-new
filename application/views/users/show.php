@@ -73,7 +73,7 @@ echo implode (' | ', $links);
 	<?php } ?>
 	<tr>
 		<th><?php echo  __('Comment') ?></th>
-		<td><?php echo  trim($user_data->comment)!='' ? $user_data->comment : '&nbsp;';  ?></td>
+		<td><?php echo  trim($user_data->comment ?? '')!='' ? $user_data->comment : '&nbsp;';  ?></td>
 	</tr>
 	<tr>
 		<th colspan="2"><?php echo  __('Contact information') ?></th>

@@ -505,7 +505,7 @@ class date
 	public static function get_closses_deduct_date_to($date)
 	{
         // parsed date
-        $parsed_date = date_parse($date);
+        $parsed_date = date_parse($date ?? '');
         $day = $parsed_date['day'];
         $month = $parsed_date['month'];
         $year = $parsed_date['year'];

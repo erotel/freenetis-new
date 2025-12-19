@@ -21,7 +21,8 @@
  * @copyright  (c) 2007-2008 Kohana Team
  * @license    http://kohanaphp.com/license.html
  */
-class cookie {
+class cookie
+{
 
 	/**
 	 * Sets a cookie with the given parameters.
@@ -47,10 +48,8 @@ class cookie {
 		// Fetch default options
 		$config = Config::get('cookie');
 
-		foreach (array('value', 'expire', 'domain', 'path', 'prefix', 'secure', 'httponly') as $item)
-		{
-			if ($$item === NULL AND isset($config[$item]))
-			{
+		foreach (array('value', 'expire', 'domain', 'path', 'prefix', 'secure', 'httponly') as $item) {
+			if ($$item === NULL and isset($config[$item])) {
 				$$item = $config[$item];
 			}
 		}
@@ -58,10 +57,15 @@ class cookie {
 		// Expiration timestamp
 		$expire = ($expire == 0) ? 0 : time() + (int) $expire;
 
+		$path   = ($path   === NULL) ? '' : (string) $path;
+		$domain = ($domain === NULL) ? '' : (string) $domain;
+		$secure   = ($secure   === NULL) ? FALSE : (bool)   $secure;
+		$httponly = ($httponly === NULL) ? FALSE : (bool)   $httponly;
+
 		// Only set httponly if possible
 		return (version_compare(PHP_VERSION, '5.2', '>='))
-			? setcookie($prefix.$name, $value, $expire, $path, $domain, $secure, $httponly)
-			: setcookie($prefix.$name, $value, $expire, $path, $domain, $secure);
+			? setcookie($prefix . $name, $value, $expire, $path, $domain, $secure, $httponly)
+			: setcookie($prefix . $name, $value, $expire, $path, $domain, $secure);
 	}
 
 	/**
@@ -74,12 +78,11 @@ class cookie {
 	 */
 	public static function get($name, $prefix = NULL, $xss_clean = FALSE)
 	{
-		if ($prefix === NULL)
-		{
+		if ($prefix === NULL) {
 			$prefix = (string) Config::get('cookie.prefix');
 		}
 
-		return Input::instance()->cookie($prefix.$name, $xss_clean);
+		return Input::instance()->cookie($prefix . $name, $xss_clean);
 	}
 
 	/**
@@ -96,5 +99,4 @@ class cookie {
 		// Sets the cookie value to an empty string, and the expiration to 24 hours ago
 		return cookie::set($name, '', -86400, $path, $domain, FALSE, FALSE, $prefix);
 	}
-
 } // End cookie

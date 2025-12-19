@@ -93,7 +93,7 @@ class Acl_Model extends ORM
 			$order_by_direction = 'asc', $filter_sql = '')
 	{
 		// order by direction check
-		if (strtolower($order_by_direction) != 'desc')
+		if (strtolower($order_by_direction ?? '') != 'desc')
 		{
 			$order_by_direction = 'asc';
 		}

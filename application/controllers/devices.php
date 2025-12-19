@@ -18,6 +18,13 @@
  */
 class Devices_Controller extends Controller
 {
+
+	public $template = 'main';
+	public $auto_render = TRUE;
+	protected $selector;
+	protected $pagination;
+	
+	
 	/**
 	 * Constructor, only test if networks is enabled
 	 */

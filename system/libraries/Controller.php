@@ -13,7 +13,26 @@
  * @property URI $uri
  * @property Input $input
  */
-class Controller_Core {
+class Controller_Core
+{
+
+	/** @var mixed */
+	public $load;
+
+	/** @var mixed */
+	public $uri;
+
+	/** @var mixed */
+	public $input;
+
+	/** @var mixed */
+	public $template;
+
+	/** @var bool */
+	public $auto_render = TRUE;
+
+
+
 
 	/**
 	 * Loads Loader, URI, and Input into this controller.
@@ -22,8 +41,7 @@ class Controller_Core {
 	 */
 	public function __construct()
 	{
-		if (Kohana::$instance === NULL)
-		{
+		if (Kohana::$instance === NULL) {
 			// Set the instance to the first controller loaded
 			Kohana::$instance = $this;
 
@@ -35,9 +53,7 @@ class Controller_Core {
 
 			// Input should always be available
 			$this->input = new Input;
-		}
-		else
-		{
+		} else {
 			// Loader should always be available
 			$this->load = Kohana::$instance->load;
 
@@ -75,5 +91,4 @@ class Controller_Core {
 		// Fetch the output and close the buffer
 		return ob_get_clean();
 	}
-
 } // End Controller Class

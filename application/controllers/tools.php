@@ -18,6 +18,8 @@
  */
 class Tools_Controller extends Controller
 {
+public $sections = array();
+
 	/**
 	 * Contruct of controller sets tabs names
 	 */

@@ -9,7 +9,8 @@
  * @copyright  (c) 2007-2008 Kohana Team
  * @license    http://kohanaphp.com/license.html
  */
-class html {
+class html
+{
 
 	/**
 	 * Convert special characters to HTML entities
@@ -21,23 +22,17 @@ class html {
 	public static function specialchars($str, $double_encode = TRUE)
 	{
 		if (is_array($str))
-			return array_map ("html::specialchars", $str);
-		
+			return array_map("html::specialchars", $str);
+
 		// Do encode existing HTML entities (default)
-		if ($double_encode == TRUE)
-		{
-			$str = htmlspecialchars($str, ENT_QUOTES, 'UTF-8');
-		}
-		else
-		{
+		if ($double_encode == TRUE) {
+			$str = htmlspecialchars($str ?? '', ENT_QUOTES, 'UTF-8');
+		} else {
 			// Do not encode existing HTML entities
 			// From PHP 5.2.3 this functionality is built-in, otherwise use a regex
-			if (version_compare(PHP_VERSION, '5.2.3', '>='))
-			{
+			if (version_compare(PHP_VERSION, '5.2.3', '>=')) {
 				$str = htmlspecialchars($str, ENT_QUOTES, 'UTF-8', FALSE);
-			}
-			else
-			{
+			} else {
 				$str = preg_replace('/&(?!(?:#\d+|[a-z]+);)/i', '&amp;', $str);
 				$str = str_replace(array('<', '>', '\'', '"'), array('&lt;', '&gt;', '&#39;', '&quot;'), $str);
 			}
@@ -54,8 +49,7 @@ class html {
 	 */
 	public static function query_string($array)
 	{
-		if (!is_array($array))
-		{
+		if (!is_array($array)) {
 			$array = array();
 		}
 		return http_build_query($array);
@@ -71,65 +65,55 @@ class html {
 	 * @param   $id_as_title if title is empty and link ends with ID, use ID or full uri as title?
 	 * @return  string
 	 */
-	public static function anchor($uri, $title = FALSE, $attributes = FALSE, 
-			$protocol = FALSE, $id_as_title = TRUE)
-	{
-		if ($uri === '')
-		{
+	public static function anchor(
+		$uri,
+		$title = FALSE,
+		$attributes = FALSE,
+		$protocol = FALSE,
+		$id_as_title = TRUE
+	) {
+		if ($uri === '') {
 			$site_url_modified = $site_url = url::base(FALSE);
-		}
-		else
-		{
-			if (strpos($uri, '://') === FALSE)
-			{
+		} else {
+			if (strpos($uri, '://') === FALSE) {
 				$site_url = url_lang::site($uri, FALSE, $protocol);
-			}
-			else
-			{
+			} else {
 				$site_url = $uri;
 			}
-			
+
 			$site_url_modified = $site_url;
-			
-			if (strpos($site_url_modified, Path::QSNAME . '=') === FALSE)
-			{
+
+			if (strpos($site_url_modified, Path::QSNAME . '=') === FALSE) {
 				$qs_var = Path::QSNAME . '=' . urlencode(url_lang::current());
-				
-				if (strpos($site_url_modified, '?') !== FALSE)
-				{
-					list ($uri_no_qs, $qs) = explode('?', $site_url_modified, 2);
+
+				if (strpos($site_url_modified, '?') !== FALSE) {
+					list($uri_no_qs, $qs) = explode('?', $site_url_modified, 2);
 					$queries = explode('&', $qs);
 					array_push($queries, $qs_var);
 					$qs = implode('&', $queries);
 					$site_url_modified = $uri_no_qs . '?' . $qs;
-				}
-				else
-				{
+				} else {
 					$site_url_modified .= '?' . $qs_var;
 				}
 			}
 		}
-		
+
 		// Title empty? Use the parsed URL or ID
-		if (empty($title))
-		{
-			if ($id_as_title && mb_eregi('/([0-9]+)$', $site_url, $r))
-			{
+		if (empty($title)) {
+			if ($id_as_title && mb_eregi('/([0-9]+)$', $site_url, $r)) {
 				$title = "<span style=\"color: red\">[$r[1]]</span>";
-			}
-			else
-			{
+			} else {
 				$title = $site_url;
 			}
 		}
-		
+
 		return
-		// Parsed URL
-		'<a href="'.html::specialchars($site_url_modified, FALSE).'"'
-		// Attributes empty? Use an empty string
-		.(empty($attributes) ? '' : html::attributes($attributes)).'>'
-		// title
-		. $title .'</a>';
+			// Parsed URL
+			'<a href="' . html::specialchars($site_url_modified, FALSE) . '"'
+			// Attributes empty? Use an empty string
+			. (empty($attributes) ? '' : html::attributes($attributes)) . '>'
+			// title
+			. $title . '</a>';
 	}
 
 	/**
@@ -144,12 +128,12 @@ class html {
 	public static function file_anchor($file, $title = FALSE, $attributes = FALSE, $protocol = FALSE)
 	{
 		return
-		// Base URL + URI = full URL
-		'<a href="'.html::specialchars(url::base(FALSE, $protocol).$file, FALSE).'"'
-		// Attributes empty? Use an empty string
-		.(empty($attributes) ? '' : html::attributes($attributes)).'>'
-		// Title empty? Use the filename part of the URI
-		.(empty($title) ? end(explode('/', $file)) : $title) .'</a>';
+			// Base URL + URI = full URL
+			'<a href="' . html::specialchars(url::base(FALSE, $protocol) . $file, FALSE) . '"'
+			// Attributes empty? Use an empty string
+			. (empty($attributes) ? '' : html::attributes($attributes)) . '>'
+			// Title empty? Use the filename part of the URI
+			. (empty($title) ? end(explode('/', $file)) : $title) . '</a>';
 	}
 
 	/**
@@ -178,22 +162,24 @@ class html {
 	{
 		// Remove the subject or other parameters that do not need to be encoded
 		$subject = FALSE;
-		if (strpos($email, '?') !== FALSE)
-		{
-			list ($email, $subject) = explode('?', $email);
+		if (strpos($email, '?') !== FALSE) {
+			list($email, $subject) = explode('?', $email);
 		}
 
 		$safe = '';
-		foreach(str_split($email) as $i => $letter)
-		{
-			switch (($letter == '@') ? rand(1, 2) : rand(1, 3))
-			{
+		foreach (str_split($email) as $i => $letter) {
+			switch (($letter == '@') ? rand(1, 2) : rand(1, 3)) {
 				// HTML entity code
-				case 1: $safe .= '&#'.ord($letter).';'; break;
+				case 1:
+					$safe .= '&#' . ord($letter) . ';';
+					break;
 				// Hex character code
-				case 2: $safe .= '&#x'.dechex(ord($letter)).';'; break;
+				case 2:
+					$safe .= '&#x' . dechex(ord($letter)) . ';';
+					break;
 				// Raw (no) encoding
-				case 3: $safe .= $letter;
+				case 3:
+					$safe .= $letter;
 			}
 		}
 
@@ -201,13 +187,13 @@ class html {
 		$title = ($title == FALSE) ? $safe : $title;
 
 		// URL encode the subject line
-		$subject = ($subject == TRUE) ? '?'.rawurlencode($subject) : '';
+		$subject = ($subject == TRUE) ? '?' . rawurlencode($subject) : '';
 
 		// Parse attributes
 		$attributes = ($attributes == TRUE) ? html::attributes($attributes) : '';
 
 		// Encoded start of the href="" is a static encoded version of 'mailto:'
-		return '<a href="&#109;&#097;&#105;&#108;&#116;&#111;&#058;'.$safe.$subject.'"'.$attributes.'>'.$title.'</a>';
+		return '<a href="&#109;&#097;&#105;&#108;&#116;&#111;&#058;' . $safe . $subject . '"' . $attributes . '>' . $title . '</a>';
 	}
 
 	/**
@@ -221,15 +207,13 @@ class html {
 		empty($segments) and $segments = Router::$segments;
 
 		$array = array();
-		while ($segment = array_pop($segments))
-		{
-			$array[] = html::anchor
-			(
-				// Complete URI for the URL
-				implode('/', $segments).'/'.$segment,
-				// Title for the current segment
-				ucwords(inflector::humanize($segment))
-			);
+		while ($segment = array_pop($segments)) {
+			$array[] = html::anchor(
+					// Complete URI for the URL
+					implode('/', $segments) . '/' . $segment,
+					// Title for the current segment
+					ucwords(inflector::humanize($segment))
+				);
 		}
 
 		// Retrun the array of all the segments
@@ -264,26 +248,22 @@ class html {
 	{
 		$compiled = '';
 
-		if (is_array($href))
-		{
-			foreach($href as $_href)
-			{
+		if (is_array($href)) {
+			foreach ($href as $_href) {
 				$_rel   = is_array($rel) ? array_shift($rel) : $rel;
 				$_type  = is_array($type) ? array_shift($type) : $type;
 				$_media = is_array($media) ? array_shift($media) : $media;
 
 				$compiled .= html::link($_href, $_rel, $_type, $suffix, $_media, $index);
 			}
-		}
-		else
-		{
+		} else {
 			// Add the suffix only when it's not already present
-			$suffix   = ( ! empty($suffix) AND strpos($href, $suffix) === FALSE) ? $suffix : '';
-			$media    = empty($media) ? '' : ' media="'.$media.'"';
-			$compiled = '<link rel="'.$rel.'" type="'.$type.'" href="'.url::base((bool) $index).$href.$suffix.'"'.$media.' />';
+			$suffix   = (! empty($suffix) and strpos($href, $suffix) === FALSE) ? $suffix : '';
+			$media    = empty($media) ? '' : ' media="' . $media . '"';
+			$compiled = '<link rel="' . $rel . '" type="' . $type . '" href="' . url::base((bool) $index) . $href . $suffix . '"' . $media . ' />';
 		}
 
-		return $compiled."\n";
+		return $compiled . "\n";
 	}
 
 	/**
@@ -297,21 +277,17 @@ class html {
 	{
 		$compiled = '';
 
-		if (is_array($script))
-		{
-			foreach($script as $name)
-			{
+		if (is_array($script)) {
+			foreach ($script as $name) {
 				$compiled .= html::script($name, $index);
 			}
-		}
-		else
-		{
+		} else {
 			// Add the suffix only when it's not already present
 			$suffix   = (strpos($script, '.js') === FALSE) ? '.js' : '';
-			$compiled = '<script type="text/javascript" src="'.url::base((bool) $index).$script.$suffix.'"></script>';
+			$compiled = '<script type="text/javascript" src="' . url::base((bool) $index) . $script . $suffix . '"></script>';
 		}
 
-		return $compiled."\n";
+		return $compiled . "\n";
 	}
 
 	/**
@@ -324,9 +300,9 @@ class html {
 	public static function execute_script($script)
 	{
 		$compiled = '<script>';
-        $compiled .= $script.'';
+		$compiled .= $script . '';
 		$compiled = '</script>';
-		return $compiled."\n";
+		return $compiled . "\n";
 	}
 
 
@@ -339,18 +315,16 @@ class html {
 	 */
 	public static function image($attr = NULL, $index = FALSE)
 	{
-		if ( ! is_array($attr))
-		{
+		if (! is_array($attr)) {
 			$attr = array('src' => $attr);
 		}
 
-		if (strpos($attr['src'], '://') === FALSE)
-		{
+		if (strpos($attr['src'], '://') === FALSE) {
 			// Make the src attribute into an absolute URL
-			$attr['src'] = url::base($index).$attr['src'];
+			$attr['src'] = url::base($index) . $attr['src'];
 		}
 
-		return '<img'.html::attributes($attr).' />';
+		return '<img' . html::attributes($attr) . ' />';
 	}
 
 	/**
@@ -365,17 +339,16 @@ class html {
 			return '';
 
 		if (is_string($attrs))
-			return ' '.$attrs;
+			return ' ' . $attrs;
 
 		$compiled = '';
-		foreach($attrs as $key => $val)
-		{
-			$compiled .= ' '.$key.'="'.$val.'"';
+		foreach ($attrs as $key => $val) {
+			$compiled .= ' ' . $key . '="' . $val . '"';
 		}
 
 		return $compiled;
 	}
-	
+
 	/**
 	 * Menu item counter for view menu
 	 *
@@ -389,5 +362,4 @@ class html {
 			. ((!empty($color) && $count) ? " style=\"background-color: $color\"" : "")
 			. '>' . $count . '</span>';
 	}
-
 } // End html

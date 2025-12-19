@@ -19,6 +19,8 @@
  */
 class Acl_Controller extends Controller
 {	
+
+	public $sections = array();
 	/**
 	 * Index function, only redirect to list of all access control rules
 	 * 

@@ -17,17 +17,13 @@ class Session_Cookie_Driver implements Session_Driver
 
 	public function __construct()
 	{
-		if (Config::get('session_name') != '')
-		{
+		if (Config::get('session_name') != '') {
 			$this->cookie_name = Config::get('session_name') . '_data';
-		}
-		else
-		{
+		} else {
 			$this->cookie_name = 'freenetissession_data';
 		}
 
-		if (Config::get('session_encryption'))
-		{
+		if (Config::get('session_encryption')) {
 			$this->encrypt = new Encrypt;
 		}
 
@@ -58,13 +54,17 @@ class Session_Cookie_Driver implements Session_Driver
 	{
 		$data = (Config::get('session_encryption')) ? $this->encrypt->encode($data) : base64_encode($data);
 
-		if (strlen($data) > 4048)
-		{
+		if (strlen($data) > 4048) {
 			Log::add('error', 'Session data exceeds the 4kB limit, ignoring write.');
 			return FALSE;
 		}
 
-		return cookie::set($this->cookie_name, $data, Config::get('session_expiration'), '/');
+		$expire = (int) Config::get('session_expiration');
+		if ($expire <= 0) {
+			$expire = 86400; // fallback 1 den
+		}
+
+		return cookie::set($this->cookie_name, $data, $expire, '/');
 	}
 
 	public function destroy($id)
@@ -86,5 +86,4 @@ class Session_Cookie_Driver implements Session_Driver
 	{
 		return TRUE;
 	}
-
 } // End Session Cookie Driver Class

@@ -49,7 +49,7 @@ if ( ! extension_loaded('iconv'))
 	);
 }
 
-if (extension_loaded('mbstring') AND (ini_get('mbstring.func_overload') & MB_OVERLOAD_STRING))
+/*if (extension_loaded('mbstring') AND (ini_get('mbstring.func_overload') & MB_OVERLOAD_STRING))
 {
 	trigger_error
 	(
@@ -59,7 +59,7 @@ if (extension_loaded('mbstring') AND (ini_get('mbstring.func_overload') & MB_OVE
 		E_USER_ERROR
 	);
 }
-
+*/
 // Check PCRE support for Unicode properties such as \p and \X.
 $ER = error_reporting(0);
 define('PCRE_UNICODE_PROPERTIES', (bool) preg_match('/^\pL$/u', 'ñ'));

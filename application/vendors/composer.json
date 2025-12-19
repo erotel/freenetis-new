@@ -1,6 +1,6 @@
 {
     "require": {
-        "mpdf/mpdf": "8.1.6"
+        "mpdf/mpdf": "^8.2"
     },
     "config": {
         "platform": {

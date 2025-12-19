@@ -20,6 +20,10 @@ class Settings_Controller extends Controller
 {
 
 	private $links;
+	public $sections = array();
+	public $form;
+	public $current_section = '';
+	
 	
 	/**
 	 * Definitions of modules and their dependencies

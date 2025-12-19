@@ -9,6 +9,48 @@
  * @copyright  (c) 2007-2008 Kohana Team
  * @license    http://kohanaphp.com/license.html
  */
+class Kohana_SessionHandler implements SessionHandlerInterface
+{
+	private $driver;
+
+	public function __construct($driver)
+	{
+		$this->driver = $driver;
+	}
+
+	public function open(string $savePath, string $sessionName): bool
+	{
+		return (bool) $this->driver->open($savePath, $sessionName);
+	}
+
+	public function close(): bool
+	{
+		return (bool) $this->driver->close();
+	}
+
+	public function read(string $id): string
+	{
+		$data = $this->driver->read($id);
+		return is_string($data) ? $data : '';
+	}
+
+	public function write(string $id, string $data): bool
+	{
+		return (bool) $this->driver->write($id, $data);
+	}
+
+	public function destroy(string $id): bool
+	{
+		return (bool) $this->driver->destroy($id);
+	}
+
+	public function gc(int $max_lifetime): int|false
+	{
+		$r = $this->driver->gc($max_lifetime);
+		return is_int($r) ? $r : 0;
+	}
+}
+
 class Session
 {
 
@@ -18,60 +60,63 @@ class Session
 	 * @var Session
 	 */
 	private static $instance;
-	
+
 	/**
 	 * Protected key names (cannot be set by the user)
 	 *
 	 * @var array
 	 */
-	protected static $protect = array
-	(
-			'session_id', 'user_agent', 'last_activity',
-			'ip_address', 'total_hits', '_kf_flash_'
+	protected static $protect = array(
+		'session_id',
+		'user_agent',
+		'last_activity',
+		'ip_address',
+		'total_hits',
+		'_kf_flash_'
 	);
-	
+
 	/**
 	 * Configuration
 	 *
 	 * @var array
 	 */
 	protected static $config;
-	
+
 	/**
 	 * Instance of driver
 	 *
 	 * @var Session_Driver
 	 */
 	protected static $driver;
-	
+
 	/**
 	 * Driver name
 	 *
 	 * @var string
 	 */
 	protected static $driver_name = 'cookie';
-	
+
 	/**
 	 * Session name
 	 *
 	 * @var string
 	 */
 	protected static $name = 'freenetissession';
-	
+
 	/**
 	 * Validate
 	 *
 	 * @var mixed
 	 */
 	protected static $validate = array('user_agent');
-	
+
 	/**
 	 * Flash messages
 	 *
 	 * @var mixed
 	 */
 	protected static $flash;
-	
+
 	/**
 	 * Input library
 	 *
@@ -84,7 +129,7 @@ class Session
 	 * 
 	 * @return Session
 	 */
-	public static function & instance()
+	public static function &instance()
 	{
 		// Create the instance if it does not exist
 		empty(self::$instance) and new Session;
@@ -109,13 +154,11 @@ class Session
 			self::$validate = Config::get('session_validate');
 
 		// This part only needs to be run once
-		if (self::$instance === NULL)
-		{
+		if (self::$instance === NULL) {
 			// Makes a mirrored array, eg: foo=foo
 			self::$protect = array_combine(self::$protect, self::$protect);
 
-			if (self::$driver_name != 'native')
-			{
+			if (self::$driver_name != 'native') {
 				// Set driver name
 				$driver = 'Session_' . ucfirst(self::$driver_name) . '_Driver';
 
@@ -135,8 +178,7 @@ class Session
 			$this->create();
 
 			// Regenerate session id
-			if (Config::get('session_regenerate') > 0 AND ($_SESSION['total_hits'] % Config::get('session_regenerate')) === 0)
-			{
+			if (Config::get('session_regenerate') > 0 and ($_SESSION['total_hits'] % Config::get('session_regenerate')) === 0) {
 				$this->regenerate();
 			}
 
@@ -173,7 +215,7 @@ class Session
 		$this->destroy();
 
 		// Set the session name after having checked it
-		if (!ctype_alnum(self::$name) OR ctype_digit(self::$name))
+		if (!ctype_alnum(self::$name) or ctype_digit(self::$name))
 			throw new Kohana_Exception('session.invalid_session_name', self::$name);
 
 		session_name(self::$name);
@@ -185,37 +227,33 @@ class Session
 
 		// Set the session cookie parameters
 		// Note: the httponly parameter was added in PHP 5.2.0
-		if (version_compare(PHP_VERSION, '5.2', '>='))
-		{
+		if (version_compare(PHP_VERSION, '5.2', '>=')) {
+			$expiration = (int) Config::get('session_expiration');
+			if ($expiration <= 0) {
+				$expiration = 86400; // fallback 1 den
+			}
+
+			session_set_cookie_params([
+				'lifetime' => $expiration,
+				'path'     => '/',
+				'domain'   => (string) (Config::get('cookie.domain') ?? ''),
+				'secure'   => (bool) Config::get('cookie.secure'),
+				'httponly' => (bool) Config::get('cookie.httponly'),
+			]);
+		} else {
 			session_set_cookie_params(
-					Config::get('session_expiration'),
-					//Config::get('cookie.path'),
-					'/', Config::get('cookie.domain'),
-					Config::get('cookie.secure'),
-					Config::get('cookie.httponly')
-			);
-		}
-		else
-		{
-			session_set_cookie_params(
-					Config::get('session_expiration'),
-					//Config::get('cookie.path'),
-					'/', Config::get('cookie.domain'),
-					Config::get('cookie.secure')
+				Config::get('session_expiration'),
+				//Config::get('cookie.path'),
+				'/',
+				Config::get('cookie.domain'),
+				Config::get('cookie.secure')
 			);
 		}
 
 		// Register non-native driver as the session handler
-		if (self::$driver_name != 'native')
-		{
-			session_set_save_handler(
-					array(self::$driver, 'open'),
-					array(self::$driver, 'close'),
-					array(self::$driver, 'read'),
-					array(self::$driver, 'write'),
-					array(self::$driver, 'destroy'),
-					array(self::$driver, 'gc')
-			);
+		if (self::$driver_name != 'native') {
+			$handler = new Kohana_SessionHandler(self::$driver);
+			session_set_save_handler($handler, true);
 		}
 
 		// Start the session!
@@ -225,37 +263,31 @@ class Session
 		$_SESSION['session_id'] = session_id();
 
 		// Set defaults
-		if (!isset($_SESSION['_kf_flash_']))
-		{
+		if (!isset($_SESSION['_kf_flash_'])) {
 			$_SESSION['total_hits'] = 0;
 			$_SESSION['_kf_flash_'] = array();
 
-			if (in_array('user_agent', self::$validate))
-			{
+			if (in_array('user_agent', self::$validate)) {
 				$_SESSION['user_agent'] = Kohana::$user_agent;
 			}
 
-			if (in_array('ip_address', self::$validate))
-			{
+			if (in_array('ip_address', self::$validate)) {
 				$_SESSION['ip_address'] = $this->input->ip_address();
 			}
 		}
 
 		// Set up flash variables
-		self::$flash = & $_SESSION['_kf_flash_'];
+		self::$flash = &$_SESSION['_kf_flash_'];
 
 		// Update constant session variables
 		$_SESSION['last_activity'] = time();
 		$_SESSION['total_hits'] += 1;
 
 		// Validate data only on hits after one
-		if ($_SESSION['total_hits'] > 1)
-		{
+		if ($_SESSION['total_hits'] > 1) {
 			// Validate the session
-			foreach (self::$validate as $valid)
-			{
-				switch ($valid)
-				{
+			foreach (self::$validate as $valid) {
+				switch ($valid) {
 					case 'user_agent':
 						if ($_SESSION[$valid] !== Kohana::$user_agent)
 							return $this->create();
@@ -268,17 +300,12 @@ class Session
 			}
 
 			// Remove old flash data
-			if (!empty(self::$flash))
-			{
-				foreach (self::$flash as $key => $state)
-				{
-					if ($state == 'old')
-					{
+			if (!empty(self::$flash)) {
+				foreach (self::$flash as $key => $state) {
+					if ($state == 'old') {
 						self::del($key);
 						unset(self::$flash[$key]);
-					}
-					else
-					{
+					} else {
 						self::$flash[$key] = 'old';
 					}
 				}
@@ -294,16 +321,13 @@ class Session
 	 */
 	public function regenerate()
 	{
-		if (self::$driver_name == 'native')
-		{
+		if (self::$driver_name == 'native') {
 			// Thank god for small gifts
 			session_regenerate_id(TRUE);
 
 			// Update session with new id
 			$_SESSION['session_id'] = session_id();
-		}
-		else
-		{
+		} else {
 			// Pass the regenerating off to the driver in case it wants to do anything special
 			$_SESSION['session_id'] = self::$driver->regenerate();
 		}
@@ -316,8 +340,7 @@ class Session
 	 */
 	public function destroy()
 	{
-		if (isset($_SESSION))
-		{
+		if (isset($_SESSION)) {
 			// Remove all session data
 			session_unset();
 
@@ -338,8 +361,7 @@ class Session
 	{
 		static $run;
 
-		if ($run === NULL)
-		{
+		if ($run === NULL) {
 			$run = TRUE;
 
 			// Run the events that depend on the session being open
@@ -362,13 +384,11 @@ class Session
 		if (empty($keys))
 			return FALSE;
 
-		if (!is_array($keys))
-		{
+		if (!is_array($keys)) {
 			$keys = array($keys => $val);
 		}
 
-		foreach ($keys as $key => $val)
-		{
+		foreach ($keys as $key => $val) {
 			if (isset(self::$protect[$key]))
 				continue;
 
@@ -389,13 +409,11 @@ class Session
 		if (empty($keys))
 			return FALSE;
 
-		if (!is_array($keys))
-		{
+		if (!is_array($keys)) {
 			$keys = array($keys => $val);
 		}
 
-		foreach ($keys as $key => $val)
-		{
+		foreach ($keys as $key => $val) {
 			if ($key == FALSE)
 				continue;
 
@@ -412,8 +430,7 @@ class Session
 	 */
 	public function keep_flash($key)
 	{
-		if (isset(self::$flash[$key]))
-		{
+		if (isset(self::$flash[$key])) {
 			self::$flash[$key] = 'new';
 			return TRUE;
 		}
@@ -463,13 +480,11 @@ class Session
 		if (empty($keys))
 			return FALSE;
 
-		if (func_num_args() > 1)
-		{
+		if (func_num_args() > 1) {
 			$keys = func_get_args();
 		}
 
-		foreach ((array) $keys as $key)
-		{
+		foreach ((array) $keys as $key) {
 			if (isset(self::$protect[$key]))
 				continue;
 
@@ -477,7 +492,6 @@ class Session
 			unset($_SESSION[$key]);
 		}
 	}
-
 }
 
 // End Session Class

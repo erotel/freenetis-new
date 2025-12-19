@@ -30,13 +30,13 @@ class Filter
 	 * Basic data of object
 	 * @var array
 	 */
-	protected $data = array
-	(
+	protected $data = array(
 		'type' => 'text',
 		'default' => array(),
 		'class' => array(),
 		'css_class' => array()
 	);
+
 
 	/**
 	 * Constructor, sets name, label and name of table (optional)
@@ -48,7 +48,7 @@ class Filter
 	public function __construct($name, $table = '')
 	{
 		$this->data['name'] = $name;
-		$this->data['label'] = url_lang::lang('texts.'.utf8::ucwords(inflector::humanize($name)));
+		$this->data['label'] = url_lang::lang('texts.' . utf8::ucwords(inflector::humanize($name)));
 		$this->data['table'] = $table;
 	}
 
@@ -61,8 +61,7 @@ class Filter
 	 */
 	public function __get($key)
 	{
-		if (isset ($this->data[$key]))
-		{
+		if (isset($this->data[$key])) {
 			return $this->data[$key];
 		}
 	}
@@ -78,7 +77,7 @@ class Filter
 	public function label($label, $use_translation = TRUE)
 	{
 		if ($use_translation)
-			$this->data['label'] = url_lang::lang('texts.'.$label);
+			$this->data['label'] = url_lang::lang('texts.' . $label);
 		else
 			$this->data['label'] = $label;
 
@@ -96,29 +95,22 @@ class Filter
 	public function __call($method, $args)
 	{
 		// cannot modify name
-		if ($method == 'name')
-		{
+		if ($method == 'name') {
 			// do nothing
 		}
 		// stores default values
-		else if ($method == 'default')
-		{
+		else if ($method == 'default') {
 			$this->data[$method][] = array('oper' => $args[0], 'value' => $args[1]);
-		}
-		else if ($method == 'css_class')
-		{
+		} else if ($method == 'css_class') {
 			$this->data[$method] = array_merge($this->data[$method], array($args[0]));
-		}
-		else
-		{
+		} else {
 			$this->data[$method] = $args[0];
 		}
-		
-		if ($method == 'type')
-		{
+
+		if ($method == 'type') {
 			$this->data['class'] = array_merge($this->data['class'], array($args[0]));
 		}
-		
+
 		return $this;
 	}
 }

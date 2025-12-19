@@ -9,8 +9,7 @@
  */
 function shutdown_function()
 {
-	if (($error_pushed = error_get_last()))
-	{
+	if (($error_pushed = error_get_last())) {
 		// get current content of page
 		$buffer = ob_get_contents();
 		// clean content
@@ -19,25 +18,25 @@ function shutdown_function()
 		@header('HTTP/1.1 500 Internal Server Error');
 		// enable content
 		ob_start();
-		
+
 		// prepare vars for view
 		$error = __('PHP fatal error');
 		$description = '';
 		$line = $error_pushed['line'];
 		$file = $error_pushed['file'];
 		$message = $error_pushed['message'];
-		
+
 		// prepare message for log
 		$lerror = 'PHP fatal error in file ' . $file . ' on line ' . $line
-		        . ' with error: ' . trim(strip_tags(nl2br($message)));
-		
+			. ' with error: ' . trim(strip_tags(nl2br($message)));
+
 		// log error
 		Log::add('error', $lerror);
 		Log::write();
-		
+
 		// load the error view
 		include Kohana::find_file('views', 'kohana_error_page');
-		
+
 		// end
 		exit();
 	}
@@ -75,7 +74,8 @@ function __($value, $args = array(), $format = 0)
  * @copyright  (c) 2007-2008 Kohana Team
  * @license    http://kohanaphp.com/license.html
  */
-class Kohana {
+class Kohana
+{
 
 	// The singleton instance of the controller
 	public static $instance;
@@ -119,7 +119,7 @@ class Kohana {
 			return;
 
 		// Start the environment setup benchmark
-		Benchmark::start(SYSTEM_BENCHMARK.'_environment_setup');
+		Benchmark::start(SYSTEM_BENCHMARK . '_environment_setup');
 
 		if (Config::get('extension_prefix') != '')
 			self::$extension_prefix = Config::get('extension_prefix');
@@ -129,14 +129,12 @@ class Kohana {
 
 		// Set the user agent
 		self::$user_agent = '';
-		
-		if (isset($_SERVER['HTTP_USER_AGENT']))
-		{
+
+		if (isset($_SERVER['HTTP_USER_AGENT'])) {
 			self::$user_agent = trim($_SERVER['HTTP_USER_AGENT']);
 		}
 
-		if (function_exists('date_default_timezone_set'))
-		{
+		if (function_exists('date_default_timezone_set')) {
 			// @todo FIXME: This is not clean solution //
 			$timezone = 'Europe/Prague';
 
@@ -174,22 +172,20 @@ class Kohana {
 		header('Content-type: text/html; charset=UTF-8');
 
 		// Set locale information
-		setlocale(LC_ALL, Config::get('language').'.UTF-8');
+		setlocale(LC_ALL, Config::get('language') . '.UTF-8');
 
-		if (Config::get('log_threshold') > 0)
-		{
+		if (Config::get('log_threshold') > 0) {
 			// Get the configured log directory
 			$log_dir = 'logs';
 			// Two possible locations
-			$app_log = APPPATH.$log_dir;
+			$app_log = APPPATH . $log_dir;
 			$log_dir = realpath($log_dir);
 
 			// If the log directory does not exist, log inside of application/
 			is_dir($log_dir) or $log_dir = $app_log;
-			
+
 			// Log directory must be writable
-			if (is_dir($log_dir) AND is_writable($log_dir))
-			{
+			if (is_dir($log_dir) and is_writable($log_dir)) {
 				Log::directory($log_dir);
 			}
 		}
@@ -212,19 +208,15 @@ class Kohana {
 		$hooks = Kohana::list_files('hooks', TRUE);
 
 		// To validate the filename extension
-		$ext = -(strlen(EXT));
+		$ext = - (strlen(EXT));
 
-		foreach($hooks as $hook)
-		{
-			if (substr($hook, $ext) === EXT)
-			{
+		foreach ($hooks as $hook) {
+			if (substr($hook, $ext) === EXT) {
 				// Hook was found, include it
 				include_once $hook;
-			}
-			else
-			{
+			} else {
 				// This should never happen
-				Log::add('error', 'Hook not found: '.$hook);
+				Log::add('error', 'Hook not found: ' . $hook);
 			}
 		}
 
@@ -232,7 +224,7 @@ class Kohana {
 		$run = TRUE;
 
 		// Stop the environment setup routine
-		Benchmark::stop(SYSTEM_BENCHMARK.'_environment_setup');
+		Benchmark::stop(SYSTEM_BENCHMARK . '_environment_setup');
 	}
 
 	/**
@@ -244,78 +236,69 @@ class Kohana {
 	 *
 	 * @return  object  instance of controller
 	 */
-	final public static function & instance()
+	final public static function &instance()
 	{
-		if (self::$instance === NULL)
-		{
-			Benchmark::start(SYSTEM_BENCHMARK.'_controller_setup');
+		if (self::$instance === NULL) {
+			Benchmark::start(SYSTEM_BENCHMARK . '_controller_setup');
 
 			// Include the Controller file
-			require Router::$directory.Router::$controller.EXT;
+			require Router::$directory . Router::$controller . EXT;
 
 			// Run system.pre_controller
 			Event::run('system.pre_controller');
 
 			// Set controller class name
-			$controller = ucfirst(Router::$controller).'_Controller';
+			$controller = ucfirst(Router::$controller) . '_Controller';
 
 			// Make sure the controller class exists
 			class_exists($controller, FALSE) or Event::run('system.404');
 
 			// Build reflection object
 			$reflection = new ReflectionClass($controller);
-			
+
 			// Get and filter methods (#594)
 			$methods = array();
 			$p_methods = $reflection->getMethods(ReflectionMethod::IS_PUBLIC);
 			$s_methods = $reflection->getMethods(ReflectionMethod::IS_STATIC);
 			$p_methods = array_diff($p_methods, $s_methods);
-			
-			foreach ($p_methods as $v)
-			{
+
+			foreach ($p_methods as $v) {
 				if (!text::starts_with($v->name, 'valid_'))
 					$methods[] = $v->name;
 			}
-			
+
 			unset($p_methods);
 			unset($s_methods);
 			unset($reflection);
-			
+
 			// Find the unique controller methods
 			$methods = array_diff($methods, get_class_methods('Controller_Core'));
 			$methods = array_diff($methods, get_class_methods('Controller'));
-			
+
 			// If there are no methods in the controller, it's invalid
 			empty($methods) and Event::run('system.404');
 
 			// Combine the methods
 			$methods = array_combine($methods, $methods);
 
-			if (isset($methods['_remap']))
-			{
+			if (isset($methods['_remap'])) {
 				// Change arguments to be $method, $arguments.
 				// This makes _remap capable of being a much more effecient dispatcher
 				Router::$arguments = array(Router::$method, Router::$arguments);
 
 				// Set the method to _remap
 				Router::$method = '_remap';
-			}
-			elseif (isset($methods[Router::$method]) AND substr(Router::$method, 0, 1) != '_')
-			{
+			} elseif (isset($methods[Router::$method]) and substr(Router::$method, 0, 1) != '_') {
 				// A valid route has been found, and nothing needs to be done.
 				// Amazing that having nothing inside the statement still works.
-			}
-			elseif (method_exists($controller, '_default'))
-			{
+			} elseif (method_exists($controller, '_default')) {
 				// Change arguments to be $method, $arguments.
 				// This makes _default a much more effecient 404 handler
 				Router::$arguments = array(Router::$method, Router::$arguments);
 
 				// Set the method to _default
 				Router::$method = '_default';
-			}
-			else
-			{
+			} else {
 				// Method was not found, run the system.404 event
 				Event::run('system.404');
 			}
@@ -327,41 +310,37 @@ class Kohana {
 			Event::run('system.post_controller_constructor');
 
 			// Stop the controller setup benchmark
-			Benchmark::stop(SYSTEM_BENCHMARK.'_controller_setup');
+			Benchmark::stop(SYSTEM_BENCHMARK . '_controller_setup');
 
 			// Start the controller execution benchmark
-			Benchmark::start(SYSTEM_BENCHMARK.'_controller_execution');
+			Benchmark::start(SYSTEM_BENCHMARK . '_controller_execution');
 
 			// Controller method name, used for calling
 			$method = Router::$method;
 
-			if (empty(Router::$arguments))
-			{
+			if (empty(Router::$arguments)) {
 				// Call the controller method with no arguments
 				$controller->$method();
-			}
-			else
-			{
+			} else {
 				// Manually call the controller for up to 4 arguments. Why? Because
 				// call_user_func_array is ~3 times slower than direct method calls.
-				switch(count(Router::$arguments))
-				{
+				switch (count(Router::$arguments)) {
 					case 1:
 						$controller->$method(Router::$arguments[0]);
-					break;
+						break;
 					case 2:
 						$controller->$method(Router::$arguments[0], Router::$arguments[1]);
-					break;
+						break;
 					case 3:
 						$controller->$method(Router::$arguments[0], Router::$arguments[1], Router::$arguments[2]);
-					break;
+						break;
 					case 4:
 						$controller->$method(Router::$arguments[0], Router::$arguments[1], Router::$arguments[2], Router::$arguments[3]);
-					break;
+						break;
 					default:
 						// Resort to using call_user_func_array for many segments
 						call_user_func_array(array($controller, $method), Router::$arguments);
-					break;
+						break;
 				}
 			}
 
@@ -369,7 +348,7 @@ class Kohana {
 			Event::run('system.post_controller');
 
 			// Stop the controller execution benchmark
-			Benchmark::stop(SYSTEM_BENCHMARK.'_controller_execution');
+			Benchmark::stop(SYSTEM_BENCHMARK . '_controller_execution');
 		}
 
 		return self::$instance;
@@ -400,27 +379,25 @@ class Kohana {
 	 */
 	public static function shutdown()
 	{
-		while (ob_get_level() > self::$buffer_level)
-		{
+		while (ob_get_level() > self::$buffer_level) {
 			// Flush all open output buffers above the internal buffer
 			ob_end_flush();
 		}
-		
+
 		//Due to blank page issue in PHP 5.4, we have to save content of buffer before calling
 		//ob_end_clean()
 		$out =  ob_get_contents();
-		
+
 		ob_end_clean();
-		
+
 		// Run the output event
 		Event::run('system.display', $out);
 
 		// Render the final output
 		self::render($out);
-		
+
 		// save logs
-		if (Config::get('log_threshold') > 0)
-		{
+		if (Config::get('log_threshold') > 0) {
 			Log::write();
 		}
 	}
@@ -437,58 +414,49 @@ class Kohana {
 		$memory = function_exists('memory_get_usage') ? (memory_get_usage() / 1024 / 1024) : 0;
 
 		// Fetch benchmark for page execution time
-		$benchmark = Benchmark::get(SYSTEM_BENCHMARK.'_total_execution');
+		$benchmark = Benchmark::get(SYSTEM_BENCHMARK . '_total_execution');
 
 		// Replace the global template variables
 		$output = str_replace(
-			array
-			(
+			array(
 				'{kohana_version}',
 				'{kohana_codename}',
 				'{execution_time}',
 				'{memory_usage}'
 			),
-			array
-			(
+			array(
 				KOHANA_VERSION,
 				KOHANA_CODENAME,
 				$benchmark['time'],
-				number_format($memory, 2).'MB'
+				number_format($memory, 2) . 'MB'
 			),
 			$output
 		);
 
-		if (ini_get('output_handler') != 'ob_gzhandler' AND ini_get('zlib.output_compression') == 0 AND $level = Config::get('output_compression'))
-		{
-			if ($level < 1 OR $level > 9)
-			{
+		if (ini_get('output_handler') != 'ob_gzhandler' and ini_get('zlib.output_compression') == 0 and $level = Config::get('output_compression')) {
+			if ($level < 1 or $level > 9) {
 				// Normalize the level to be an integer between 1 and 9. This
 				// step must be done to prevent gzencode from triggering an error
 				$level = max(1, min($level, 9));
 			}
 
-			if (stripos(@$_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip') !== FALSE)
-			{
+			if (stripos(@$_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip') !== FALSE) {
 				$compress = 'gzip';
-			}
-			elseif (stripos(@$_SERVER['HTTP_ACCEPT_ENCODING'], 'deflate') !== FALSE)
-			{
+			} elseif (stripos(@$_SERVER['HTTP_ACCEPT_ENCODING'], 'deflate') !== FALSE) {
 				$compress = 'deflate';
 			}
 		}
 
-		if (isset($compress) AND $level > 0)
-		{
-			switch($compress)
-			{
+		if (isset($compress) and $level > 0) {
+			switch ($compress) {
 				case 'gzip':
 					// Compress output using gzip
 					$output = gzencode($output, $level);
-				break;
+					break;
 				case 'deflate':
 					// Compress output using zlib (HTTP deflate)
 					$output = gzdeflate($output, $level);
-				break;
+					break;
 			}
 
 			// This header must be sent with compressed content to prevent
@@ -496,15 +464,14 @@ class Kohana {
 			header('Vary: Accept-Encoding');
 
 			// Send the content encoding header
-			header('Content-Encoding: '.$compress);
+			header('Content-Encoding: ' . $compress);
 
 			// Sending Content-Length in CGI can result in unexpected behavior
-			if (stripos(PHP_SAPI, 'cgi') === FALSE)
-			{
-				header('Content-Length: '.strlen($output));
+			if (stripos(PHP_SAPI, 'cgi') === FALSE) {
+				header('Content-Length: ' . strlen($output));
 			}
 		}
-		
+
 		echo $output;
 	}
 
@@ -521,49 +488,49 @@ class Kohana {
 	public static function exception_handler($exception, $message = NULL, $file = NULL, $line = NULL)
 	{
 		// PHP errors have 5 args, always
-		$PHP_ERROR = (func_num_args() === 5);
+		// PHP errors usually call handler with 5 args, but in PHP 8+ we must be defensive.
+		$PHP_ERROR = is_int($exception);
 
-		// Test to see if errors should be displayed
-		if ($PHP_ERROR AND (error_reporting() & $exception) === 0)
-			return;
+		// If called as PHP error handler, $exception is errno (int)
+		if ($PHP_ERROR) {
+			// If errors should be ignored, stop here
+			if ((error_reporting() & $exception) === 0)
+				return;
 
-		// This is useful for hooks to determine if a page has an error
-		self::$has_error = TRUE;
-
-		// Error handling will use exactly 5 args, every time
-		if ($PHP_ERROR)
-		{
 			$code     = $exception;
 			$type     = 'PHP Error';
 			$template = 'kohana_error_page';
-		}
-		else
-		{
-			$code     = $exception->getCode();
-			$type     = get_class($exception);
-			$message  = $exception->getMessage();
-			$file     = $exception->getFile();
-			$line     = $exception->getLine();
-			$template = ($exception instanceof Kohana_Exception) ? $exception->getTemplate() : 'kohana_error_page';
+		} else {
+			if ($exception instanceof Throwable) {
+				$code    = (int) $exception->getCode();
+				$type    = get_class($exception);
+				$message = $exception->getMessage();
+				$file    = $exception->getFile();
+				$line    = $exception->getLine();
+				$template = ($exception instanceof Kohana_Exception) ? $exception->getTemplate() : 'kohana_error_page';
+			} else {
+				// Fallback: unknown non-object passed in
+				$code    = 0;
+				$type    = 'Error';
+				$message = $message ?? 'Unknown error';
+				$file    = $file ?? '';
+				$line    = $line ?? 0;
+				$template = 'kohana_error_page';
+			}
 		}
 
-		if (is_numeric($code))
-		{
+
+		if (is_numeric($code)) {
 			$codes = Kohana::lang('errors');
 
-			if ( ! empty($codes[$code]))
-			{
+			if (! empty($codes[$code])) {
 				list($level, $error, $description) = $codes[$code];
-			}
-			else
-			{
+			} else {
 				$level = 1;
 				$error = $PHP_ERROR ? Kohana::lang('core.Unknown error') : get_class($exception);
 				$description = '';
 			}
-		}
-		else
-		{
+		} else {
 			// Custom error message, this will never be logged
 			$level = 5;
 			$error = $code;
@@ -572,30 +539,24 @@ class Kohana {
 
 		// Remove the DOCROOT from the path, as a security precaution
 		$file = str_replace('\\', '/', realpath($file));
-		$file = preg_replace('|^'.preg_quote(DOCROOT).'|', '', $file);
+		$file = preg_replace('|^' . preg_quote(DOCROOT) . '|', '', $file);
 
-		if (Config::get('log_threshold') >= $level)
-		{
+		if (Config::get('log_threshold') >= $level) {
 			// Log the error
 			Log::add('error', Kohana::lang('core.uncaught_exception', $type, $message, $file, $line));
 		}
 
-		if ($PHP_ERROR)
-		{
-			$description = Kohana::lang('errors.'.E_RECOVERABLE_ERROR);
+		if ($PHP_ERROR) {
+			$description = Kohana::lang('errors.' . E_RECOVERABLE_ERROR);
 			$description = $description[2];
-		}
-		else
-		{
-			if (method_exists($exception, 'sendHeaders'))
-			{
+		} else {
+			if (method_exists($exception, 'sendHeaders')) {
 				// Send the headers if they have not already been sent
 				headers_sent() or $exception->sendHeaders();
 			}
 		}
 
-		while (ob_get_level() > self::$buffer_level)
-		{
+		while (ob_get_level() > self::$buffer_level) {
 			// Clean all active output buffers
 			ob_end_clean();
 		}
@@ -607,12 +568,13 @@ class Kohana {
 		if (Config::get('display_errors') != '')
 			self::$display_errors = Config::get('display_errors');
 
-		if (self::$display_errors)
-		{
-			if ($line != FALSE)
-			{
+		if (self::$display_errors) {
+			if ($line != FALSE) {
 				// Remove the first entry of debug_backtrace(), it is the exception_handler call
-				$trace = $PHP_ERROR ? array_slice(debug_backtrace(), 1) : $exception->getTrace();
+				$trace = $PHP_ERROR ? array_slice(debug_backtrace(), 1)
+					: (($exception instanceof Throwable) ? $exception->getTrace() : array_slice(debug_backtrace(), 1));
+
+
 
 				// Beautify backtrace
 				$trace = self::backtrace($trace);
@@ -620,9 +582,7 @@ class Kohana {
 
 			// Load the error
 			include self::find_file('views', empty($template) ? 'kohana_error_page' : $template);
-		}
-		else
-		{
+		} else {
 			// Get the i18n messages
 			$error = Kohana::lang('generic_error');
 			$message = sprintf(Kohana::lang('errors_disabled'), url::site(''), url::site(Router::$current_uri));
@@ -630,7 +590,7 @@ class Kohana {
 			// Load the errors_disabled view
 			include self::find_file('views', 'kohana_error_disabled');
 		}
-		
+
 		// Added by Ondřej Fibich at 8. 7. 2011
 		// This is necessary for unit test, where error in controller are
 		// checked via HTTP status code.
@@ -688,49 +648,45 @@ class Kohana {
 
 		if (class_exists($class, FALSE))
 			return TRUE;
-		
-		if (($type = strrpos($class, '_')) !== FALSE)
-		{
+
+		if (($type = strrpos($class, '_')) !== FALSE) {
 			// Find the class suffix
 			$type = substr($class, $type + 1);
 		}
 
-		switch($type)
-		{
+		switch ($type) {
 			case 'Core':
 				$type = 'libraries';
 				$file = substr($class, 0, -5);
-			break;
+				break;
 			case 'Controller':
 				$type = 'controllers';
 				// Lowercase filename
 				$file = strtolower(substr($class, 0, -11));
-			break;
+				break;
 			case 'Model':
 				$type = 'models';
 				// Lowercase filename
 				$file = strtolower(substr($class, 0, -6));
-			break;
+				break;
 			case 'Driver':
 				$type = 'libraries/drivers';
 				$file = str_replace('_', '/', substr($class, 0, -7));
-			break;
+				break;
 			default:
 				// Forge library elements
-				if (strncmp($class, 'Form_', 5) == 0)
-				{
+				if (strncmp($class, 'Form_', 5) == 0) {
 					$type = 'libraries';
 					$file = 'forge/' . $class;
 				}
 				// This can mean either a library or a helper, but libraries must
 				// always be capitalized, so we check if the first character is
 				// lowercase. If it is, we are loading a helper, not a library.
-				else
-				{
+				else {
 					$type = (ord($class[0]) > 96) ? 'helpers' : 'libraries';
 					$file = $class;
 				}
-			break;
+				break;
 		}
 
 		// If the file doesn't exist, just return
@@ -740,18 +696,14 @@ class Kohana {
 		// Load the requested file
 		require_once $filepath;
 
-		if ($type === 'libraries' OR $type === 'helpers')
-		{
-			if ($extension = self::find_file($type, $prefix.$class))
-			{
+		if ($type === 'libraries' or $type === 'helpers') {
+			if ($extension = self::find_file($type, $prefix . $class)) {
 				// Load the class extension
 				require_once $extension;
-			}
-			elseif (substr($class, -5) !== '_Core' AND class_exists($class.'_Core', FALSE))
-			{
+			} elseif (substr($class, -5) !== '_Core' and class_exists($class . '_Core', FALSE)) {
 				// Transparent class extensions are handled using eval. This is
 				// a disgusting hack, but it works very well.
-				eval('class '.$class.' extends '.$class.'_Core { }');
+				eval('class ' . $class . ' extends ' . $class . '_Core { }');
 			}
 		}
 
@@ -774,43 +726,38 @@ class Kohana {
 	{
 		static $found = array();
 
-		$search = $directory.'/'.$filename;
+		$search = $directory . '/' . $filename;
 		$hash   = sha1($search);
 
 		if (isset($found[$hash]))
 			return $found[$hash];
 
-		if ($directory == 'config' OR $directory == 'i18n')
-		{
+		if ($directory == 'config' or $directory == 'i18n') {
 			$fnd = array();
 
 			// Search from SYSPATH up
-			foreach(array_reverse(Config::include_paths()) as $path)
-			{
-				if (is_file($path.$search.EXT)) $fnd[] = $path.$search.EXT;
+			foreach (array_reverse(Config::include_paths()) as $path) {
+				if (is_file($path . $search . EXT)) $fnd[] = $path . $search . EXT;
 			}
 
 			// If required and nothing was found, throw an exception
-			if ($required == TRUE AND $fnd === array())
-				throw new Kohana_Exception('resource_not_found', Kohana::lang(''.inflector::singular($directory)), $filename);
+			if ($required == TRUE and $fnd === array())
+				throw new Kohana_Exception('resource_not_found', Kohana::lang('' . inflector::singular($directory)), $filename);
 
 			return $found[$hash] = $fnd;
-		}
-		else
-		{
+		} else {
 			// Users can define their own extensions, .css, etc
 			$ext = ($ext == FALSE) ? EXT : '';
 
 			// Find the file and return its filename
-			foreach (Config::include_paths() as $path)
-			{
-				if (is_file($path.$search.$ext))
-					return $found[$hash] = $path.$search.$ext;
+			foreach (Config::include_paths() as $path) {
+				if (is_file($path . $search . $ext))
+					return $found[$hash] = $path . $search . $ext;
 			}
 
 			// If the file is required, throw an exception
 			if ($required == TRUE)
-				throw new Kohana_Exception('resource_not_found', Kohana::lang(''.inflector::singular($directory)), $filename);
+				throw new Kohana_Exception('resource_not_found', Kohana::lang('' . inflector::singular($directory)), $filename);
 
 			return $found[$hash] = FALSE;
 		}
@@ -828,31 +775,24 @@ class Kohana {
 	{
 		$files = array();
 
-		if ($path === FALSE)
-		{
-			foreach(Config::include_paths() as $path)
-			{
-				$files = array_merge($files, self::list_files($directory, $recursive, $path.$directory));
+		if ($path === FALSE) {
+			foreach (Config::include_paths() as $path) {
+				$files = array_merge($files, self::list_files($directory, $recursive, $path . $directory));
 			}
-		}
-		else
-		{
-			$path = rtrim($path, '/').'/';
+		} else {
+			$path = rtrim($path, '/') . '/';
 
-			if (is_readable($path))
-			{
-				foreach(glob($path.'*') as $index => $item)
-				{
+			if (is_readable($path)) {
+				foreach (glob($path . '*') as $index => $item) {
 					$files[] = $item = str_replace('\\', '/', $item);
 
 					// Handle recursion
-					if (is_dir($item) AND $recursive == TRUE)
-					{
+					if (is_dir($item) and $recursive == TRUE) {
 						// Filename should only be the basename
 						$item = pathinfo($item, PATHINFO_BASENAME);
 
 						// Append sub-directory search
-						$files = array_merge($files, self::list_files($directory, TRUE, $path.$item));
+						$files = array_merge($files, self::list_files($directory, TRUE, $path . $item));
 					}
 				}
 			}
@@ -875,25 +815,21 @@ class Kohana {
 		$arr_strs = explode('.', $key);
 		$group = array_shift($arr_strs);
 
-		if ( ! isset($language[$group]))
-		{
+		if (! isset($language[$group])) {
 			// Messages from this file
 			$messages = array();
 
 			// The name of the file to search for
-			$filename = Config::get('language').'/'.$group;
+			$filename = Config::get('language') . '/' . $group;
 
 			// Loop through the files and include each one, so SYSPATH files
 			// can be overloaded by more localized files
-			foreach(self::find_file('i18n', $filename) as $filename)
-			{
+			foreach (self::find_file('i18n', $filename) as $filename) {
 				include $filename;
 
 				// Merge in configuration
-				if ( ! empty($lang) AND is_array($lang))
-				{
-					foreach($lang as $k => $v)
-					{
+				if (! empty($lang) and is_array($lang)) {
+					foreach ($lang as $k => $v) {
 						$messages[$k] = $v;
 					}
 				}
@@ -905,13 +841,11 @@ class Kohana {
 
 		$line = self::key_string(utf8::strtolower($key), $language);
 
-		if ($line === NULL)
-		{
+		if ($line === NULL) {
 			$line = implode('.', $arr_strs);
 		}
 
-		if (is_string($line) AND func_num_args() > 1)
-		{
+		if (is_string($line) and func_num_args() > 1) {
 			$args = array_slice(func_get_args(), 1);
 
 			// Add the arguments into the line
@@ -932,40 +866,32 @@ class Kohana {
 	public static function key_string($keys, $array)
 	{
 		// No array to search
-		if ((empty($keys) AND is_string($keys)) OR (empty($array) AND is_array($array)))
+		if ((empty($keys) and is_string($keys)) or (empty($array) and is_array($array)))
 			return;
 
 		// Prepare for loop
 		$keys = explode('.', $keys);
 
 		// Loop down and find the key
-		do
-		{
+		do {
 			// Get the current key
 			$key = array_shift($keys);
 
 			// Value is set, dig deeper or return
-			if (isset($array[$key]))
-			{
+			if (isset($array[$key])) {
 				// If the key is an array, and we haven't hit bottom, prepare
 				// for the next loop by re-referencing to the next child
-				if (is_array($array[$key]) AND ! empty($keys))
-				{
-					$array =& $array[$key];
-				}
-				else
-				{
+				if (is_array($array[$key]) and ! empty($keys)) {
+					$array = &$array[$key];
+				} else {
 					// Requested key was found
 					return $array[$key];
 				}
-			}
-			else
-			{
+			} else {
 				// Requested key is not set
 				break;
 			}
-		}
-		while ( ! empty($keys));
+		} while (! empty($keys));
 
 		// We return NULL, because it's less common than FALSE
 		return;
@@ -985,9 +911,8 @@ class Kohana {
 		$params = func_get_args();
 		$output = array();
 
-		foreach($params as $var)
-		{
-			$output[] = '<pre>'.html::specialchars(print_r($var, TRUE)).'</pre>';
+		foreach ($params as $var) {
+			$output[] = '<pre>' . html::specialchars(print_r($var, TRUE)) . '</pre>';
 		}
 
 		return implode("\n", $output);
@@ -1002,50 +927,44 @@ class Kohana {
 	 */
 	public static function backtrace($trace)
 	{
-		if ( ! is_array($trace))
+		if (! is_array($trace))
 			return;
 
 		// Final output
 		$output = array();
 
-		foreach($trace as $entry)
-		{
+		foreach ($trace as $entry) {
 			$temp = '<li>';
 
-			if (isset($entry['file']))
-			{
+			if (isset($entry['file'])) {
 				// Add file (without docroot)
-				$temp .= '<strong>'.preg_replace('!^'.preg_quote(DOCROOT).'!', '', $entry['file']);
+				$temp .= '<strong>' . preg_replace('!^' . preg_quote(DOCROOT) . '!', '', $entry['file']);
 				// Add line
-				$temp .= ' ['.$entry['line'].']:</strong>';
+				$temp .= ' [' . $entry['line'] . ']:</strong>';
 			}
 
 			$temp .= '<pre>';
 
-			if (isset($entry['class']))
-			{
+			if (isset($entry['class'])) {
 				// Add class and call type
-				$temp .= $entry['class'].$entry['type'];
+				$temp .= $entry['class'] . $entry['type'];
 			}
 
 			// Add function
-			$temp .= $entry['function'].'( ';
+			$temp .= $entry['function'] . '( ';
 
 			// Add function args
-			if (isset($entry['args']) AND is_array($entry['args']))
-			{
+			if (isset($entry['args']) and is_array($entry['args'])) {
 				// Separator starts as nothing
 				$sep = '';
 
-				while ($arg = array_shift($entry['args']))
-				{
-					if (is_string($arg) AND is_file($arg))
-					{
+				while ($arg = array_shift($entry['args'])) {
+					if (is_string($arg) and is_file($arg)) {
 						// Remove docroot from filename
-						$arg = preg_replace('!^'.preg_quote(DOCROOT).'!', '', $arg);
+						$arg = preg_replace('!^' . preg_quote(DOCROOT) . '!', '', $arg);
 					}
 
-					$temp .= $sep.print_r($arg, TRUE);
+					$temp .= $sep . print_r($arg, TRUE);
 
 					// Change separator to a comma
 					$sep = ', ';
@@ -1057,15 +976,15 @@ class Kohana {
 			$output[] = $temp;
 		}
 
-		return '<ul class="backtrace">'.implode("\n", $output).'</ul>';
+		return '<ul class="backtrace">' . implode("\n", $output) . '</ul>';
 	}
-
 } // End Kohana
 
 /**
  * Creates a generic i18n exception.
  */
-class Kohana_Exception extends Exception {
+class Kohana_Exception extends Exception
+{
 
 	// Template file
 	protected $template = 'kohana_error_page';
@@ -1078,8 +997,8 @@ class Kohana_Exception extends Exception {
 
 	// Error code, filename, line number
 	protected $code = E_KOHANA;
-	protected $file = FALSE;
-	protected $line = FALSE;
+	//protected $file = FALSE;
+	//protected $line = FALSE;
 
 	/**
 	 * Set exception message.
@@ -1095,12 +1014,9 @@ class Kohana_Exception extends Exception {
 		$message = Kohana::lang($error, $args);
 
 		// Handle error messages that are not set
-		if ($message == $error)
-		{
+		if ($message == $error) {
 			$this->message .= $error;
-		}
-		else
-		{
+		} else {
 			$this->message = $message;
 		}
 	}
@@ -1135,13 +1051,13 @@ class Kohana_Exception extends Exception {
 		// Send the 500 header
 		header('HTTP/1.1 500 Internal Server Error');
 	}
-
 } // End Kohana Exception
 
 /**
  * Creates a custom exception.
  */
-class Kohana_User_Exception extends Kohana_Exception {
+class Kohana_User_Exception extends Kohana_Exception
+{
 
 	/**
 	 * Set exception title and message.
@@ -1155,18 +1071,17 @@ class Kohana_User_Exception extends Kohana_Exception {
 		$this->code     = $title;
 		$this->message  = $message;
 
-		if ($template != FALSE)
-		{
+		if ($template != FALSE) {
 			$this->template = $template;
 		}
 	}
-
 } // End Kohana PHP Exception
 
 /**
  * Creates a Page Not Found exception.
  */
-class Kohana_404_Exception extends Kohana_Exception {
+class Kohana_404_Exception extends Kohana_Exception
+{
 
 	protected $code = E_PAGE_NOT_FOUND;
 
@@ -1178,10 +1093,9 @@ class Kohana_404_Exception extends Kohana_Exception {
 	 */
 	public function __construct($page = FALSE, $template = FALSE)
 	{
-		if ($page === FALSE)
-		{
+		if ($page === FALSE) {
 			// Construct the page URI using Router properties
-			$page = Router::$current_uri.Router::$url_suffix.Router::$query_string;
+			$page = Router::$current_uri . Router::$url_suffix . Router::$query_string;
 		}
 
 		$this->message = Kohana::lang('page_not_found', $page);
@@ -1201,7 +1115,6 @@ class Kohana_404_Exception extends Kohana_Exception {
 		// Send the 404 header
 		header('HTTP/1.1 404 File Not Found');
 	}
-
 } // End Kohana 404 Exception
 
 /**

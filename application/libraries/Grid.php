@@ -76,6 +76,10 @@ class Grid
 	protected $id = NULL;
 	protected $method = 'post';
 	private $first_add_button;
+	/** @var mixed */
+	public $pagination = NULL;
+	public $selector = NULL;
+	
 
 	/**
 	 * Grid construct
@@ -87,29 +91,26 @@ class Grid
 	 */
 	public function __construct($base_uri, $title, $config = NULL, $template = FALSE)
 	{
-		if ($template)
-		{
+		if ($template) {
 			$this->template = $template;
 		}
-		
-		if (!text::starts_with($base_uri, url::base()))
-		{
+
+		if (!text::starts_with($base_uri, url::base())) {
 			$base_uri = url_lang::base() . $base_uri;
 		}
-		
+
 		$this->template = new View($this->template);
 		$this->template->base_uri = $this->base_uri = $base_uri;
 		$this->template->title = $title;
 		$this->template->label = (isset($config['total_items'])) ? __('Total items') . ': ' . $config['total_items'] : '';
-		
-		if (is_array($config))
-		{
+
+		if (is_array($config)) {
 			$this->initialize($config);
 		}
-		
+
 		// autoset id from url if empty
-		if (!$this->id)		
-			$this->id = str_replace(array('/','_'), '-', url_lang::current(2)).'-grid';
+		if (!$this->id)
+			$this->id = str_replace(array('/', '_'), '-', url_lang::current(2)) . '-grid';
 
 		$this->first_add_button = true;
 	}
@@ -122,18 +123,14 @@ class Grid
 	public function initialize($config = array())
 	{
 		// Assign config values to the object
-		foreach ($config as $key => $value)
-		{
-			if (property_exists($this, $key))
-			{
+		foreach ($config as $key => $value) {
+			if (property_exists($this, $key)) {
 				$this->$key = $value;
 			}
 		}
 
-		if ($this->use_paginator)
-		{
-			$this->pagination = new Pagination(array
-			(
+		if ($this->use_paginator) {
+			$this->pagination = new Pagination(array(
 				'base_url'					=> $this->base_url,
 				'uri_segment'				=> $this->uri_segment,
 				'total_items'				=> $this->total_items,
@@ -142,10 +139,8 @@ class Grid
 			));
 		}
 
-		if ($this->use_selector)
-		{
-			$this->selector = new Selector(array
-			(
+		if ($this->use_selector) {
+			$this->selector = new Selector(array(
 				'current'					=> $this->current,
 				'selector_increace'			=> $this->selector_increace,
 				'selector_min'				=> $this->selector_min,
@@ -178,7 +173,9 @@ class Grid
 	public function add_new_button($uri, $label, $options = array(), $help = '')
 	{
 		$this->buttons[] = html::anchor(
-				$uri, __($label), $options
+			$uri,
+			__($label),
+			$options
 		) . (($help == '') ? '' : '&nbsp;' . $help);
 	}
 
@@ -205,11 +202,11 @@ class Grid
 		// Class name
 		$field = ucfirst($method);
 		// Create the input
-		if ($field == 'Order_field' || $field == 'Order_callback_field' ||
-			$field == 'Order_form_field' || $field == 'Order_link_field')
-		{
-			$arguments = array
-			(
+		if (
+			$field == 'Order_field' || $field == 'Order_callback_field' ||
+			$field == 'Order_form_field' || $field == 'Order_link_field'
+		) {
+			$arguments = array(
 				'order_by'				=> $this->order_by,
 				'order_by_direction'	=> $this->order_by_direction,
 				'limit_results'			=> $this->limit_results,
@@ -220,43 +217,31 @@ class Grid
 				'use_selector'			=> $this->use_selector,
 				'use_paginator'			=> $this->use_paginator
 			);
-			
-			if (!isset($args[1]))
-			{
+
+			if (!isset($args[1])) {
 				$args[1] = NULL;
 			}
-			
+
 			$field = new $field($args[0], $args[1], $arguments);
-		}
-		else if ($field == 'Grouped_action_field')
-		{
+		} else if ($field == 'Grouped_action_field') {
 			$field = new Grouped_action_field(isset($args[0]) ? $args[0] : NULL);
-		}
-		else if ($field == 'Link_field')
-		{
+		} else if ($field == 'Link_field') {
 			$field = new $field($args[0], @$args[1]);
-		}
-		else
-		{
+		} else {
 			$field = new $field($args[0]);
 		}
 
-		if (!($field instanceof Field))
-		{
+		if (!($field instanceof Field)) {
 			throw new Kohana_Exception('grige.unknown_field', get_class($field));
 		}
 
-		if ($field instanceof Grid_Actionfield)
-		{
+		if ($field instanceof Grid_Actionfield) {
 			$this->action_fields[] = $field;
-		}
-		else
-		{
+		} else {
 			$this->fields[] = $field;
 		}
 
-		if ($field instanceof Form_Field || $field instanceof Order_Form_Field)
-		{
+		if ($field instanceof Form_Field || $field instanceof Order_Form_Field) {
 			$this->form = TRUE;
 		}
 
@@ -304,5 +289,4 @@ class Grid
 	{
 		return $this->render();
 	}
-
 }

@@ -1,4 +1,4 @@
-<?php defined('SYSPATH') OR die('No direct access allowed.');
+<?php defined('SYSPATH') or die('No direct access allowed.');
 /**
  * Provides database access in a platform agnostic way, using simple query building blocks.
  *
@@ -9,7 +9,8 @@
  * @copyright  (c) 2007-2008 Kohana Team
  * @license    http://kohanaphp.com/license.html
  */
-class Database {
+class Database
+{
 
 	// Database instances
 	public static $instances = array();
@@ -18,8 +19,7 @@ class Database {
 	public static $benchmarks = array();
 
 	// Configuration
-	protected $config = array
-	(
+	protected $config = array(
 		'benchmark'     => FALSE,
 		'persistent'    => FALSE,
 		'connection'    => '',
@@ -58,10 +58,9 @@ class Database {
 	 * @param   mixed   configuration array or DSN
 	 * @return  Database
 	 */
-	public static function & instance($name = 'default', $config = NULL)
+	public static function &instance($name = 'default', $config = NULL)
 	{
-		if ( ! isset(Database::$instances[$name]))
-		{
+		if (! isset(Database::$instances[$name])) {
 			// Create a new instance
 			Database::$instances[$name] = new Database($config === NULL ? $name : $config);
 		}
@@ -87,12 +86,10 @@ class Database {
 	 */
 	public function __construct($config = array())
 	{
-		if (!is_array($config) && is_string($config) && strlen($config))
-		{
+		if (!is_array($config) && is_string($config) && strlen($config)) {
 			// Parse the DSN, creating an array to hold the connection parameters
-			$db = array
-			(
-				'type'     => 'mysql',
+			$db = array(
+				'type'     => 'mysqli',
 				'user'     => FALSE,
 				'pass'     => FALSE,
 				'host'     => FALSE,
@@ -104,31 +101,29 @@ class Database {
 			// Reset the connection array to the database config
 			$this->config['connection'] = $db;
 
-			$this->config['connection']['type'] = (defined('PHP_VERSION_ID') && PHP_VERSION_ID >= 60000) ? 'mysqli' : 'mysql';
+			$this->config['type'] = 'mysqli';
 			$this->config['connection']['user'] = Config::get('db_user');
 			$this->config['connection']['pass'] = Config::get('db_password');
 			$this->config['connection']['host'] = Config::get('db_host');
 			$this->config['connection']['database'] = Config::get('db_name');
 
 			$this->config['table_prefix'] = Config::get('db_table_prefix');
-		}
-		else
-		{
+		} else {
 			$this->config['connection'] = $config;
 		}
 
 		// Set driver name
-		$driver = 'Database_'.ucfirst($this->config['connection']['type']).'_Driver';
+		$driver = 'Database_' . ucfirst($this->config['connection']['type']) . '_Driver';
 
 		// Load the driver
-		if ( ! Kohana::auto_load($driver))
+		if (! Kohana::auto_load($driver))
 			throw new Kohana_Database_Exception('core.driver_not_found', $this->config['connection']['type'], get_class($this));
 
 		// Initialize the driver
 		$this->driver = new $driver($this->config);
 
 		// Validate the driver
-		if ( ! ($this->driver instanceof Database_Driver))
+		if (! ($this->driver instanceof Database_Driver))
 			throw new Kohana_Database_Exception('core.driver_implements', $this->config['connection']['type'], get_class($this), 'Database_Driver');
 
 		Log::add('debug', 'Database Library initialized');
@@ -142,10 +137,9 @@ class Database {
 	public function connect()
 	{
 		// A link can be a resource or an object
-		if ( ! is_resource($this->link) AND ! is_object($this->link))
-		{
+		if (! is_resource($this->link) and ! is_object($this->link)) {
 			$this->link = $this->driver->connect();
-			if ( ! is_resource($this->link) AND ! is_object($this->link))
+			if (! is_resource($this->link) and ! is_object($this->link))
 				throw new Kohana_Database_Exception('database.connection', $this->driver->show_error());
 
 			// Clear password after successful connect
@@ -176,8 +170,7 @@ class Database {
 		}
 
 		// Compile binds if needed
-		if (isset($binds))
-		{
+		if (isset($binds)) {
 			$sql = $this->compile_binds($sql, $binds);
 		}
 
@@ -187,8 +180,7 @@ class Database {
 		// Stop the benchmark
 		$stop = microtime(TRUE);
 
-		if ($this->config['benchmark'] == TRUE)
-		{
+		if ($this->config['benchmark'] == TRUE) {
 			// Benchmark the query
 			Database::$benchmarks[] = array('query' => $sql, 'time' => $stop - $start, 'rows' => count($result));
 		}
@@ -204,35 +196,25 @@ class Database {
 	 */
 	public function select($sql = '*')
 	{
-		if (func_num_args() > 1)
-		{
+		if (func_num_args() > 1) {
 			$sql = func_get_args();
-		}
-		elseif (is_string($sql))
-		{
+		} elseif (is_string($sql)) {
 			$sql = explode(',', $sql);
-		}
-		else
-		{
+		} else {
 			$sql = (array) $sql;
 		}
 
-		foreach ($sql as $val)
-		{
+		foreach ($sql as $val) {
 			if (($val = trim($val)) === '') continue;
 
-			if (strpos($val, '(') === FALSE AND $val !== '*')
-			{
-				if (preg_match('/^DISTINCT\s++(.+)$/i', $val, $matches))
-				{
+			if (strpos($val, '(') === FALSE and $val !== '*') {
+				if (preg_match('/^DISTINCT\s++(.+)$/i', $val, $matches)) {
 					// Only prepend with table prefix if table name is specified
-					$val = (strpos($matches[1], '.') !== FALSE) ? $this->config['table_prefix'].$matches[1] : $matches[1];
+					$val = (strpos($matches[1], '.') !== FALSE) ? $this->config['table_prefix'] . $matches[1] : $matches[1];
 
 					$this->distinct = TRUE;
-				}
-				else
-				{
-					$val = (strpos($val, '.') !== FALSE) ? $this->config['table_prefix'].$val : $val;
+				} else {
+					$val = (strpos($val, '.') !== FALSE) ? $this->config['table_prefix'] . $val : $val;
 				}
 
 				$val = $this->driver->escape_column($val);
@@ -252,38 +234,28 @@ class Database {
 	 */
 	public function from($sql)
 	{
-		if (func_num_args() > 1)
-		{
+		if (func_num_args() > 1) {
 			$sql = func_get_args();
-		}
-		elseif (is_string($sql))
-		{
+		} elseif (is_string($sql)) {
 			$sql = explode(',', $sql);
-		}
-		else
-		{
+		} else {
 			$sql = array($sql);
 		}
 
-		foreach ($sql as $val)
-		{
-			if (is_string($val))
-			{
+		foreach ($sql as $val) {
+			if (is_string($val)) {
 				if (($val = trim($val)) === '') continue;
 
 				// TODO: Temporary solution, this should be moved to database driver (AS is checked for twice)
-				if (stripos($val, ' AS ') !== FALSE)
-				{
+				if (stripos($val, ' AS ') !== FALSE) {
 					$val = str_ireplace(' AS ', ' AS ', $val);
 
 					list($table, $alias) = explode(' AS ', $val);
 
 					// Attach prefix to both sides of the AS
-					$val = $this->config['table_prefix'].$table.' AS '.$this->config['table_prefix'].$alias;
-				}
-				else
-				{
-					$val = $this->config['table_prefix'].$val;
+					$val = $this->config['table_prefix'] . $table . ' AS ' . $this->config['table_prefix'] . $alias;
+				} else {
+					$val = $this->config['table_prefix'] . $val;
 				}
 			}
 
@@ -306,69 +278,56 @@ class Database {
 	{
 		$join = array();
 
-		if ( ! empty($type))
-		{
+		if (! empty($type)) {
 			$type = strtoupper(trim($type));
 
-			if ( ! in_array($type, array('LEFT', 'RIGHT', 'OUTER', 'INNER', 'LEFT OUTER', 'RIGHT OUTER'), TRUE))
-			{
+			if (! in_array($type, array('LEFT', 'RIGHT', 'OUTER', 'INNER', 'LEFT OUTER', 'RIGHT OUTER'), TRUE)) {
 				$type = '';
-			}
-			else
-			{
+			} else {
 				$type .= ' ';
 			}
 		}
 
 		$cond = array();
 		$keys  = is_array($key) ? $key : array($key => $value);
-		foreach ($keys as $key => $value)
-		{
-			$key    = (strpos($key, '.') !== FALSE) ? $this->config['table_prefix'].$key : $key;
+		foreach ($keys as $key => $value) {
+			$key    = (strpos($key, '.') !== FALSE) ? $this->config['table_prefix'] . $key : $key;
 
-			if (is_string($value))
-			{
+			if (is_string($value)) {
 				// Only escape if it's a string
-				$value = $this->driver->escape_column($this->config['table_prefix'].$value);
+				$value = $this->driver->escape_column($this->config['table_prefix'] . $value);
 			}
 
 			$cond[] = $this->driver->where($key, $value, 'AND ', count($cond), FALSE);
 		}
 
-		if ( ! is_array($this->join))
-		{
+		if (! is_array($this->join)) {
 			$this->join = array();
 		}
 
-		if ( ! is_array($table))
-		{
+		if (! is_array($table)) {
 			$table = array($table);
 		}
 
-		foreach ($table as $t)
-		{
-			if (is_string($t))
-			{
+		foreach ($table as $t) {
+			if (is_string($t)) {
 				// TODO: Temporary solution, this should be moved to database driver (AS is checked for twice)
-				if (stripos($t, ' AS ') !== FALSE)
-				{
+				if (stripos($t, ' AS ') !== FALSE) {
 					$t = str_ireplace(' AS ', ' AS ', $t);
 
 					list($table, $alias) = explode(' AS ', $t);
 
 					// Attach prefix to both sides of the AS
-					$t = $this->config['table_prefix'].$table.' AS '.$this->config['table_prefix'].$alias;
-				}
-				else
-				{
-					$t = $this->config['table_prefix'].$t;
+					$t = $this->config['table_prefix'] . $table . ' AS ' . $this->config['table_prefix'] . $alias;
+				} else {
+					$t = $this->config['table_prefix'] . $t;
 				}
 			}
 
 			$join['tables'][] = $this->driver->escape_column($t);
 		}
 
-		$join['conditions'] = '('.trim(implode(' ', $cond)).')';
+		$join['conditions'] = '(' . trim(implode(' ', $cond)) . ')';
 		$join['type'] = $type;
 
 		$this->join[] = $join;
@@ -387,23 +346,17 @@ class Database {
 	 */
 	public function where($key, $value = NULL, $quote = TRUE)
 	{
-		$quote = (func_num_args() < 2 AND ! is_array($key)) ? -1 : $quote;
-		if (is_object($key))
-		{
+		$quote = (func_num_args() < 2 and ! is_array($key)) ? -1 : $quote;
+		if (is_object($key)) {
 			$keys = array((string) $key => '');
-		}
-		elseif ( ! is_array($key))
-		{
+		} elseif (! is_array($key)) {
 			$keys = array($key => $value);
-		}
-		else
-		{
+		} else {
 			$keys = $key;
 		}
 
-		foreach ($keys as $key => $value)
-		{
-			$key           = (strpos($key, '.') !== FALSE) ? $this->config['table_prefix'].$key : $key;
+		foreach ($keys as $key => $value) {
+			$key           = (strpos($key, '.') !== FALSE) ? $this->config['table_prefix'] . $key : $key;
 			$this->where[] = $this->driver->where($key, $value, 'AND ', count($this->where), $quote);
 		}
 
@@ -420,23 +373,17 @@ class Database {
 	 */
 	public function orwhere($key, $value = NULL, $quote = TRUE)
 	{
-		$quote = (func_num_args() < 2 AND ! is_array($key)) ? -1 : $quote;
-		if (is_object($key))
-		{
+		$quote = (func_num_args() < 2 and ! is_array($key)) ? -1 : $quote;
+		if (is_object($key)) {
 			$keys = array((string) $key => '');
-		}
-		elseif ( ! is_array($key))
-		{
+		} elseif (! is_array($key)) {
 			$keys = array($key => $value);
-		}
-		else
-		{
+		} else {
 			$keys = $key;
 		}
 
-		foreach ($keys as $key => $value)
-		{
-			$key           = (strpos($key, '.') !== FALSE) ? $this->config['table_prefix'].$key : $key;
+		foreach ($keys as $key => $value) {
+			$key           = (strpos($key, '.') !== FALSE) ? $this->config['table_prefix'] . $key : $key;
 			$this->where[] = $this->driver->where($key, $value, 'OR ', count($this->where), $quote);
 		}
 
@@ -455,9 +402,8 @@ class Database {
 	{
 		$fields = is_array($field) ? $field : array($field => $match);
 
-		foreach ($fields as $field => $match)
-		{
-			$field         = (strpos($field, '.') !== FALSE) ? $this->config['table_prefix'].$field : $field;
+		foreach ($fields as $field => $match) {
+			$field         = (strpos($field, '.') !== FALSE) ? $this->config['table_prefix'] . $field : $field;
 			$this->where[] = $this->driver->like($field, $match, $auto, 'AND ', count($this->where));
 		}
 
@@ -476,9 +422,8 @@ class Database {
 	{
 		$fields = is_array($field) ? $field : array($field => $match);
 
-		foreach ($fields as $field => $match)
-		{
-			$field         = (strpos($field, '.') !== FALSE) ? $this->config['table_prefix'].$field : $field;
+		foreach ($fields as $field => $match) {
+			$field         = (strpos($field, '.') !== FALSE) ? $this->config['table_prefix'] . $field : $field;
 			$this->where[] = $this->driver->like($field, $match, $auto, 'OR ', count($this->where));
 		}
 
@@ -497,9 +442,8 @@ class Database {
 	{
 		$fields = is_array($field) ? $field : array($field => $match);
 
-		foreach ($fields as $field => $match)
-		{
-			$field         = (strpos($field, '.') !== FALSE) ? $this->config['table_prefix'].$field : $field;
+		foreach ($fields as $field => $match) {
+			$field         = (strpos($field, '.') !== FALSE) ? $this->config['table_prefix'] . $field : $field;
 			$this->where[] = $this->driver->notlike($field, $match, $auto, 'AND ', count($this->where));
 		}
 
@@ -517,9 +461,8 @@ class Database {
 	{
 		$fields = is_array($field) ? $field : array($field => $match);
 
-		foreach ($fields as $field => $match)
-		{
-			$field         = (strpos($field, '.') !== FALSE) ? $this->config['table_prefix'].$field : $field;
+		foreach ($fields as $field => $match) {
+			$field         = (strpos($field, '.') !== FALSE) ? $this->config['table_prefix'] . $field : $field;
 			$this->where[] = $this->driver->notlike($field, $match, $auto, 'OR ', count($this->where));
 		}
 
@@ -537,9 +480,8 @@ class Database {
 	{
 		$fields = is_array($field) ? $field : array($field => $match);
 
-		foreach ($fields as $field => $match)
-		{
-			$field         = (strpos($field, '.') !== FALSE) ? $this->config['table_prefix'].$field : $field;
+		foreach ($fields as $field => $match) {
+			$field         = (strpos($field, '.') !== FALSE) ? $this->config['table_prefix'] . $field : $field;
 			$this->where[] = $this->driver->regex($field, $match, 'AND ', count($this->where));
 		}
 
@@ -557,9 +499,8 @@ class Database {
 	{
 		$fields = is_array($field) ? $field : array($field => $match);
 
-		foreach ($fields as $field => $match)
-		{
-			$field         = (strpos($field, '.') !== FALSE) ? $this->config['table_prefix'].$field : $field;
+		foreach ($fields as $field => $match) {
+			$field         = (strpos($field, '.') !== FALSE) ? $this->config['table_prefix'] . $field : $field;
 			$this->where[] = $this->driver->regex($field, $match, 'OR ', count($this->where));
 		}
 
@@ -577,9 +518,8 @@ class Database {
 	{
 		$fields = is_array($field) ? $field : array($field => $match);
 
-		foreach ($fields as $field => $match)
-		{
-			$field         = (strpos($field, '.') !== FALSE) ? $this->config['table_prefix'].$field : $field;
+		foreach ($fields as $field => $match) {
+			$field         = (strpos($field, '.') !== FALSE) ? $this->config['table_prefix'] . $field : $field;
 			$this->where[] = $this->driver->notregex($field, $match, 'AND ', count($this->where));
 		}
 
@@ -597,9 +537,8 @@ class Database {
 	{
 		$fields = is_array($field) ? $field : array($field => $match);
 
-		foreach ($fields as $field => $match)
-		{
-			$field         = (strpos($field, '.') !== FALSE) ? $this->config['table_prefix'].$field : $field;
+		foreach ($fields as $field => $match) {
+			$field         = (strpos($field, '.') !== FALSE) ? $this->config['table_prefix'] . $field : $field;
 			$this->where[] = $this->driver->notregex($field, $match, 'OR ', count($this->where));
 		}
 
@@ -614,21 +553,17 @@ class Database {
 	 */
 	public function groupby($by)
 	{
-		if ( ! is_array($by))
-		{
+		if (! is_array($by)) {
 			$by = explode(',', (string) $by);
 		}
 
-		foreach ($by as $val)
-		{
+		foreach ($by as $val) {
 			$val = trim($val);
 
-			if ($val != '')
-			{
+			if ($val != '') {
 				// Add the table prefix if we are using table.column names
-				if(strpos($val, '.'))
-				{
-					$val = $this->config['table_prefix'].$val;
+				if (strpos($val, '.')) {
+					$val = $this->config['table_prefix'] . $val;
 				}
 
 				$this->groupby[] = $this->driver->escape_column($val);
@@ -675,28 +610,24 @@ class Database {
 	 */
 	public function orderby($orderby, $direction = NULL)
 	{
-		if ( ! is_array($orderby))
-		{
+		if (! is_array($orderby)) {
 			$orderby = array($orderby => $direction);
 		}
 
-		foreach ($orderby as $column => $direction)
-		{
-			$direction = strtoupper(trim($direction));
+		foreach ($orderby as $column => $direction) {
+			$direction = strtoupper(trim($direction ?? ''));
 
 			// Add a direction if the provided one isn't valid
-			if ( ! in_array($direction, array('ASC', 'DESC', 'RAND()', 'RANDOM()', 'NULL')))
-			{
+			if (! in_array($direction, array('ASC', 'DESC', 'RAND()', 'RANDOM()', 'NULL'))) {
 				$direction = 'ASC';
 			}
 
 			// Add the table prefix if a table.column was passed
-			if (strpos($column, '.'))
-			{
-				$column = $this->config['table_prefix'].$column;
+			if (strpos($column, '.')) {
+				$column = $this->config['table_prefix'] . $column;
 			}
 
-			$this->orderby[] = $this->driver->escape_column($column).' '.$direction;
+			$this->orderby[] = $this->driver->escape_column($column) . ' ' . $direction;
 		}
 
 		return $this;
@@ -713,8 +644,7 @@ class Database {
 	{
 		$this->limit  = (int) $limit;
 
-		if ($offset !== NULL OR ! is_int($this->offset))
-		{
+		if ($offset !== NULL or ! is_int($this->offset)) {
 			$this->offset($offset);
 		}
 
@@ -743,16 +673,14 @@ class Database {
 	 */
 	public function set($key, $value = '')
 	{
-		if ( ! is_array($key))
-		{
+		if (! is_array($key)) {
 			$key = array($key => $value);
 		}
 
-		foreach ($key as $k => $v)
-		{
+		foreach ($key as $k => $v) {
 			// Add a table prefix if the column includes the table.
 			if (strpos($k, '.'))
-				$k = $this->config['table_prefix'].$k;
+				$k = $this->config['table_prefix'] . $k;
 
 			$this->set[$k] = $this->driver->escape($v);
 		}
@@ -770,13 +698,11 @@ class Database {
 	 */
 	public function get($table = '', $limit = NULL, $offset = NULL)
 	{
-		if ($table != '')
-		{
+		if ($table != '') {
 			$this->from($table);
 		}
 
-		if ( ! is_null($limit))
-		{
+		if (! is_null($limit)) {
 			$this->limit($limit, $offset);
 		}
 
@@ -802,18 +728,15 @@ class Database {
 	 */
 	public function getwhere($table = '', $where = NULL, $limit = NULL, $offset = NULL)
 	{
-		if ($table != '')
-		{
+		if ($table != '') {
 			$this->from($table);
 		}
 
-		if ( ! is_null($where))
-		{
+		if (! is_null($where)) {
 			$this->where($where);
 		}
 
-		if ( ! is_null($limit))
-		{
+		if (! is_null($limit)) {
 			$this->limit($limit, $offset);
 		}
 
@@ -836,13 +759,11 @@ class Database {
 	 */
 	public function compile($table = '', $limit = NULL, $offset = NULL)
 	{
-		if ($table != '')
-		{
+		if ($table != '') {
 			$this->from($table);
 		}
 
-		if ( ! is_null($limit))
-		{
+		if (! is_null($limit)) {
 			$this->limit($limit, $offset);
 		}
 
@@ -862,17 +783,15 @@ class Database {
 	 */
 	public function insert($table = '', $set = NULL)
 	{
-		if ( ! is_null($set))
-		{
+		if (! is_null($set)) {
 			$this->set($set);
 		}
 
 		if ($this->set == NULL)
 			throw new Kohana_Database_Exception('database.must_use_set');
 
-		if ($table == '')
-		{
-			if ( ! isset($this->from[0]))
+		if ($table == '') {
+			if (! isset($this->from[0]))
 				throw new Kohana_Database_Exception('database.must_use_table');
 
 			$table = $this->from[0];
@@ -881,7 +800,7 @@ class Database {
 		// If caching is enabled, clear the cache before inserting
 		($this->config['cache'] === TRUE) and $this->clear_cache();
 
-		$sql = $this->driver->insert($this->config['table_prefix'].$table, array_keys($this->set), array_values($this->set));
+		$sql = $this->driver->insert($this->config['table_prefix'] . $table, array_keys($this->set), array_values($this->set));
 
 		$this->reset_write();
 
@@ -898,24 +817,19 @@ class Database {
 	 */
 	public function in($field, $values, $not = FALSE)
 	{
-		if (is_array($values))
-		{
+		if (is_array($values)) {
 			$escaped_values = array();
-			foreach ($values as $v)
-			{
-				if (is_numeric($v))
-				{
+			foreach ($values as $v) {
+				if (is_numeric($v)) {
 					$escaped_values[] = $v;
-				}
-				else
-				{
-					$escaped_values[] = "'".$this->driver->escape_str($v)."'";
+				} else {
+					$escaped_values[] = "'" . $this->driver->escape_str($v) . "'";
 				}
 			}
 			$values = implode(",", $escaped_values);
 		}
 
-		$where = $this->driver->escape_column(((strpos($field,'.') !== FALSE) ? $this->config['table_prefix'] : ''). $field).' '.($not === TRUE ? 'NOT ' : '').'IN ('.$values.')';
+		$where = $this->driver->escape_column(((strpos($field, '.') !== FALSE) ? $this->config['table_prefix'] : '') . $field) . ' ' . ($not === TRUE ? 'NOT ' : '') . 'IN (' . $values . ')';
 		$this->where[] = $this->driver->where($where, '', 'AND ', count($this->where), -1);
 
 		return $this;
@@ -942,23 +856,21 @@ class Database {
 	 */
 	public function merge($table = '', $set = NULL)
 	{
-		if ( ! is_null($set))
-		{
+		if (! is_null($set)) {
 			$this->set($set);
 		}
 
 		if ($this->set == NULL)
 			throw new Kohana_Database_Exception('database.must_use_set');
 
-		if ($table == '')
-		{
-			if ( ! isset($this->from[0]))
+		if ($table == '') {
+			if (! isset($this->from[0]))
 				throw new Kohana_Database_Exception('database.must_use_table');
 
 			$table = $this->from[0];
 		}
 
-		$sql = $this->driver->merge($this->config['table_prefix'].$table, array_keys($this->set), array_values($this->set));
+		$sql = $this->driver->merge($this->config['table_prefix'] . $table, array_keys($this->set), array_values($this->set));
 
 		$this->reset_write();
 		return $this->query($sql);
@@ -974,28 +886,25 @@ class Database {
 	 */
 	public function update($table = '', $set = NULL, $where = NULL)
 	{
-		if ( is_array($set))
-		{
+		if (is_array($set)) {
 			$this->set($set);
 		}
 
-		if ( ! is_null($where))
-		{
+		if (! is_null($where)) {
 			$this->where($where);
 		}
 
 		if ($this->set == FALSE)
 			throw new Kohana_Database_Exception('database.must_use_set');
 
-		if ($table == '')
-		{
-			if ( ! isset($this->from[0]))
+		if ($table == '') {
+			if (! isset($this->from[0]))
 				throw new Kohana_Database_Exception('database.must_use_table');
 
 			$table = $this->from[0];
 		}
 
-		$sql = $this->driver->update($this->config['table_prefix'].$table, $this->set, $this->where);
+		$sql = $this->driver->update($this->config['table_prefix'] . $table, $this->set, $this->where);
 
 		$this->reset_write();
 		return $this->query($sql);
@@ -1010,20 +919,16 @@ class Database {
 	 */
 	public function delete($table = '', $where = NULL)
 	{
-		if ($table == '')
-		{
-			if ( ! isset($this->from[0]))
+		if ($table == '') {
+			if (! isset($this->from[0]))
 				throw new Kohana_Database_Exception('database.must_use_table');
 
 			$table = $this->from[0];
-		}
-		else
-		{
-			$table = $this->config['table_prefix'].$table;
+		} else {
+			$table = $this->config['table_prefix'] . $table;
 		}
 
-		if (! is_null($where))
-		{
+		if (! is_null($where)) {
 			$this->where($where);
 		}
 
@@ -1043,7 +948,7 @@ class Database {
 	 */
 	public function last_query()
 	{
-	   return $this->last_query;
+		return $this->last_query;
 	}
 
 	/**
@@ -1055,20 +960,18 @@ class Database {
 	 */
 	public function count_records($table = FALSE, $where = NULL)
 	{
-		if (count($this->from) < 1)
-		{
+		if (count($this->from) < 1) {
 			if ($table == FALSE)
 				throw new Kohana_Database_Exception('database.must_use_table');
 
 			$this->from($table);
 		}
 
-		if ($where !== NULL)
-		{
+		if ($where !== NULL) {
 			$this->where($where);
 		}
 
-		$query = $this->select('COUNT(*) AS '.$this->escape_column('records_found'))->get()->result(TRUE);
+		$query = $this->select('COUNT(*) AS ' . $this->escape_column('records_found'))->get()->result(TRUE);
 
 		return (int) $query->current()->records_found;
 	}
@@ -1126,7 +1029,7 @@ class Database {
 	public function table_exists($table_name, $prefix = TRUE)
 	{
 		if ($prefix)
-			return in_array($this->config['table_prefix'].$table_name, $this->list_tables());
+			return in_array($this->config['table_prefix'] . $table_name, $this->list_tables());
 		else
 			return in_array($table_name, $this->list_tables());
 	}
@@ -1140,8 +1043,7 @@ class Database {
 	 */
 	public function compile_binds($sql, $binds)
 	{
-		foreach ((array) $binds as $val)
-		{
+		foreach ((array) $binds as $val) {
 			// If the SQL contains no more bind marks ("?"), we're done.
 			if (($next_bind_pos = strpos($sql, '?')) === FALSE)
 				break;
@@ -1153,7 +1055,7 @@ class Database {
 			$val = str_replace('?', '{%B%}', $val);
 
 			// Replace the first bind mark ("?") with its corresponding value.
-			$sql = substr($sql, 0, $next_bind_pos).$val.substr($sql, $next_bind_pos + 1);
+			$sql = substr($sql, 0, $next_bind_pos) . $val . substr($sql, $next_bind_pos + 1);
 		}
 
 		// Restore placeholders.
@@ -1170,7 +1072,7 @@ class Database {
 	{
 		$this->link or $this->connect();
 
-		return $this->driver->field_data($this->config['table_prefix'].$table);
+		return $this->driver->field_data($this->config['table_prefix'] . $table);
 	}
 
 	/**
@@ -1183,7 +1085,7 @@ class Database {
 	{
 		$this->link or $this->connect();
 
-		return $this->driver->list_fields($this->config['table_prefix'].$table);
+		return $this->driver->list_fields($this->config['table_prefix'] . $table);
 	}
 
 	/**
@@ -1248,16 +1150,11 @@ class Database {
 	 */
 	public function clear_cache($sql = NULL)
 	{
-		if ($sql === TRUE)
-		{
+		if ($sql === TRUE) {
 			$this->driver->clear_cache($this->last_query);
-		}
-		elseif (is_string($sql))
-		{
+		} elseif (is_string($sql)) {
 			$this->driver->clear_cache($sql);
-		}
-		else
-		{
+		} else {
 			$this->driver->clear_cache();
 		}
 
@@ -1299,8 +1196,7 @@ class Database {
 	 */
 	public function pop()
 	{
-		if (count($this->query_history) == 0)
-		{
+		if (count($this->query_history) == 0) {
 			// No history
 			return $this;
 		}
@@ -1329,26 +1225,22 @@ class Database {
 	 */
 	public function count_last_query()
 	{
-		if ($sql = $this->last_query())
-		{
-			if (stripos($sql, 'LIMIT') !== FALSE)
-			{
+		if ($sql = $this->last_query()) {
+			if (stripos($sql, 'LIMIT') !== FALSE) {
 				// Remove LIMIT from the SQL
 				$sql = preg_replace('/\sLIMIT\s+[^a-z]+/i', ' ', $sql);
 			}
 
-			if (stripos($sql, 'OFFSET') !== FALSE)
-			{
+			if (stripos($sql, 'OFFSET') !== FALSE) {
 				// Remove OFFSET from the SQL
 				$sql = preg_replace('/\sOFFSET\s+\d+/i', '', $sql);
 			}
 
 			// Get the total rows from the last query executed
-			$result = $this->query
-			(
-				'SELECT COUNT(*) AS '.$this->escape_column('total_rows').' '.
-				'FROM ('.trim($sql).') AS '.$this->escape_table('counted_results')
-			);
+			$result = $this->query(
+					'SELECT COUNT(*) AS ' . $this->escape_column('total_rows') . ' ' .
+						'FROM (' . trim($sql) . ') AS ' . $this->escape_table('counted_results')
+				);
 
 			// Return the total number of rows from the query
 			return (int) $result->current()->total_rows;
@@ -1356,7 +1248,7 @@ class Database {
 
 		return FALSE;
 	}
-	
+
 	/**
 	 * Sets benchmark on or off
 	 *
@@ -1367,7 +1259,7 @@ class Database {
 	{
 		$this->config['benchmark'] = ($is_on === TRUE);
 	}
-	
+
 	/**
 	 * Gets value of database variable. If variable not present in the database
 	 * NULL is returned.
@@ -1379,20 +1271,18 @@ class Database {
 	public function get_variable_value($name)
 	{
 		$result = $this->query("SHOW VARIABLES LIKE ?", $name);
-		
-		if ($result->count() == 1)
-		{
+
+		if ($result->count() == 1) {
 			$o = $result->current();
-			
-			if (isset($o->Value))
-			{
+
+			if (isset($o->Value)) {
 				return $o->Value;
 			}
 		}
-		
+
 		return NULL;
 	}
-	
+
 	/**
 	 * Alterch character set amd collate of database to given values.
 	 * 
@@ -1404,21 +1294,20 @@ class Database {
 	public function alter_db_character_set($db_name, $set, $collate)
 	{
 		$db_name = $this->escape_table($db_name);
-		
-		$this->query("ALTER DATABASE $db_name DEFAULT CHARACTER SET ? COLLATE ?", array
-		(
-			$set, $collate
+
+		$this->query("ALTER DATABASE $db_name DEFAULT CHARACTER SET ? COLLATE ?", array(
+			$set,
+			$collate
 		));
 	}
-
 } // End Database Class
 
 
 /**
  * Sets the code for a Database exception.
  */
-class Kohana_Database_Exception extends Kohana_Exception {
+class Kohana_Database_Exception extends Kohana_Exception
+{
 
 	protected $code = E_DATABASE_ERROR;
-
 } // End Kohana Database Exception

@@ -1,6 +1,6 @@
 <?php
 
-namespace Mpdf\Http;
+namespace Mpdf\PsrHttpMessageShim;
 
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;

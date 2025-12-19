@@ -1,4 +1,4 @@
-<?php defined('SYSPATH') OR die('No direct access allowed.');
+<?php defined('SYSPATH') or die('No direct access allowed.');
 /**
  * Database API driver
  *
@@ -9,7 +9,8 @@
  * @copyright  (c) 2007-2008 Kohana Team
  * @license    http://kohanaphp.com/license.html
  */
-abstract class Database_Driver {
+abstract class Database_Driver
+{
 
 	protected $query_cache;
 
@@ -38,7 +39,7 @@ abstract class Database_Driver {
 	 */
 	public function delete($table, $where)
 	{
-		return 'DELETE FROM '.$this->escape_table($table).' WHERE '.implode(' ', $where);
+		return 'DELETE FROM ' . $this->escape_table($table) . ' WHERE ' . implode(' ', $where);
 	}
 
 	/**
@@ -51,11 +52,10 @@ abstract class Database_Driver {
 	 */
 	public function update($table, $values, $where)
 	{
-		foreach ($values as $key => $val)
-		{
-			$valstr[] = $this->escape_column($key).' = '.$val;
+		foreach ($values as $key => $val) {
+			$valstr[] = $this->escape_column($key) . ' = ' . $val;
 		}
-		return 'UPDATE '.$this->escape_table($table).' SET '.implode(', ', $valstr).' WHERE '.implode(' ',$where);
+		return 'UPDATE ' . $this->escape_table($table) . ' SET ' . implode(', ', $valstr) . ' WHERE ' . implode(' ', $where);
 	}
 
 	/**
@@ -98,50 +98,36 @@ abstract class Database_Driver {
 	{
 		$prefix = ($num_wheres == 0) ? '' : $type;
 
-		if ($quote === -1)
-		{
+		if ($quote === -1) {
 			$value = '';
-		}
-		else
-		{
-			if ($value === NULL)
-			{
-				if ( ! $this->has_operator($key))
-				{
+		} else {
+			if ($value === NULL) {
+				if (! $this->has_operator($key)) {
 					$key .= ' IS';
 				}
 
 				$value = ' NULL';
-			}
-			elseif (is_bool($value))
-			{
-				if ( ! $this->has_operator($key))
-				{
+			} elseif (is_bool($value)) {
+				if (! $this->has_operator($key)) {
 					$key .= ' =';
 				}
 
 				$value = ($value == TRUE) ? ' 1' : ' 0';
-			}
-			else
-			{
-				if ( ! $this->has_operator($key) AND ! empty($key))
-				{
-					$key = $this->escape_column($key).' =';
-				}
-				else
-				{
+			} else {
+				if (! $this->has_operator($key) and ! empty($key)) {
+					$key = $this->escape_column($key) . ' =';
+				} else {
 					preg_match('/^(.+?)([<>!=]+|\bIS(?:\s+NULL))\s*$/i', $key, $matches);
-					if (isset($matches[1]) AND isset($matches[2]))
-					{
-						$key = $this->escape_column(trim($matches[1])).' '.trim($matches[2]);
+					if (isset($matches[1]) and isset($matches[2])) {
+						$key = $this->escape_column(trim($matches[1])) . ' ' . trim($matches[2]);
 					}
 				}
 
-				$value = ' '.(($quote == TRUE) ? $this->escape($value) : $value);
+				$value = ' ' . (($quote == TRUE) ? $this->escape($value) : $value);
 			}
 		}
 
-		return $prefix.$key.$value;
+		return $prefix . $key . $value;
 	}
 
 	/**
@@ -160,13 +146,12 @@ abstract class Database_Driver {
 
 		$match = $this->escape_str($match);
 
-		if ($auto === TRUE)
-		{
+		if ($auto === TRUE) {
 			// Add the start and end quotes
-			$match = '%'.str_replace('%', '\\%', $match).'%';
+			$match = '%' . str_replace('%', '\\%', $match) . '%';
 		}
 
-		return $prefix.' '.$this->escape_column($field).' LIKE \''.$match . '\'  COLLATE utf8_general_ci';
+		return $prefix . ' ' . $this->escape_column($field) . ' LIKE \'' . $match . '\'  COLLATE utf8_general_ci';
 	}
 
 	/**
@@ -184,13 +169,12 @@ abstract class Database_Driver {
 
 		$match = $this->escape_str($match);
 
-		if ($auto === TRUE)
-		{
+		if ($auto === TRUE) {
 			// Add the start and end quotes
-			$match = '%'.$match.'%';
+			$match = '%' . $match . '%';
 		}
 
-		return $prefix.' '.$this->escape_column($field).' NOT LIKE \''.$match.'\'  COLLATE utf8_general_ci';
+		return $prefix . ' ' . $this->escape_column($field) . ' NOT LIKE \'' . $match . '\'  COLLATE utf8_general_ci';
 	}
 
 	/**
@@ -232,11 +216,10 @@ abstract class Database_Driver {
 	public function insert($table, $keys, $values)
 	{
 		// Escape the column names
-		foreach ($keys as $key => $value)
-		{
+		foreach ($keys as $key => $value) {
 			$keys[$key] = $this->escape_column($value);
 		}
-		return 'INSERT INTO '.$this->escape_table($table).' ('.implode(', ', $keys).') VALUES ('.implode(', ', $values).')';
+		return 'INSERT INTO ' . $this->escape_table($table) . ' (' . implode(', ', $keys) . ') VALUES (' . implode(', ', $values) . ')';
 	}
 
 	/**
@@ -301,24 +284,23 @@ abstract class Database_Driver {
 	 */
 	public function escape($value)
 	{
-		if ( ! $this->db_config['escape'])
+		if (! $this->db_config['escape'])
 			return $value;
 
-		switch (gettype($value))
-		{
+		switch (gettype($value)) {
 			case 'string':
-				$value = '\''.$this->escape_str($value).'\'';
-			break;
+				$value = '\'' . $this->escape_str($value) . '\'';
+				break;
 			case 'boolean':
 				$value = (int) $value;
-			break;
+				break;
 			case 'double':
 				// Convert to non-locale aware float to prevent possible commas
 				$value = sprintf('%F', $value);
-			break;
+				break;
 			default:
 				$value = ($value === NULL) ? 'NULL' : $value;
-			break;
+				break;
 		}
 
 		return (string) $value;
@@ -372,13 +354,11 @@ abstract class Database_Driver {
 	{
 		static $sql_types;
 
-		if ($sql_types === NULL)
-		{
+		if ($sql_types === NULL) {
 			// Load SQL data types
 			//$sql_types = Config::get('sql_types');
 
-			$sql_types = array
-			(
+			$sql_types = array(
 				'tinyint'      => array('type' => 'int', 'max' => 127),
 				'smallint'     => array('type' => 'int', 'max' => 32767),
 				'mediumint'    => array('type' => 'int', 'max' => 8388607),
@@ -422,48 +402,39 @@ abstract class Database_Driver {
 
 			// BLOB
 			$sql_types['tinyblob'] = $sql_types['mediumblob'] = $sql_types['longblob'] = $sql_types['clob'] = $sql_types['blob'];
-
 		}
 
 		$str = strtolower(trim($str));
 
-		if (($open  = strpos($str, '(')) !== FALSE)
-		{
+		if (($open  = strpos($str, '(')) !== FALSE) {
 			// Find closing bracket
 			$close = strpos($str, ')', $open) - 1;
 
 			// Find the type without the size
 			$type = substr($str, 0, $open);
-		}
-		else
-		{
+		} else {
 			// No length
 			$type = $str;
 		}
 
-		empty($sql_types[$type]) and exit
-		(
-			'Unknown field type: '.$type.'. '.
-			'Please report this: http://trac.kohanaphp.com/newticket'
-		);
+		empty($sql_types[$type]) and exit('Unknown field type: ' . $type . '. ' .
+			'Please report this: http://trac.kohanaphp.com/newticket');
 
 		// Fetch the field definition
 		$field = $sql_types[$type];
 
-		switch ($field['type'])
-		{
+		switch ($field['type']) {
 			case 'string':
 			case 'float':
-				if (isset($close))
-				{
+				if (isset($close)) {
 					// Add the length to the field info
 					$field['length'] = substr($str, $open + 1, $close - $open);
 				}
-			break;
+				break;
 			case 'int':
 				// Add unsigned value
 				$field['unsigned'] = (strpos($str, 'unsigned') !== FALSE);
-			break;
+				break;
 		}
 
 		return $field;
@@ -476,16 +447,13 @@ abstract class Database_Driver {
 	 */
 	public function clear_cache($sql = NULL)
 	{
-		if (empty($sql))
-		{
+		if (empty($sql)) {
 			$this->query_cache = array();
-		}
-		else
-		{
+		} else {
 			unset($this->query_cache[$this->query_hash($sql)]);
 		}
 
-		Log::add('debug', 'Database cache cleared: '.get_class($this));
+		Log::add('debug', 'Database cache cleared: ' . get_class($this));
 	}
 
 	/**
@@ -499,14 +467,14 @@ abstract class Database_Driver {
 	{
 		return sha1(str_replace("\n", ' ', trim($sql)));
 	}
-
 } // End Database Driver Interface
 
 /**
  * Database_Result
  *
  */
-abstract class Database_Result implements ArrayAccess, Iterator, Countable {
+abstract class Database_Result implements ArrayAccess, Iterator, Countable
+{
 
 	// Result resource, insert id, and SQL
 	protected $result;
@@ -576,36 +544,39 @@ abstract class Database_Result implements ArrayAccess, Iterator, Countable {
 	/**
 	 * Countable: count
 	 */
+	#[\ReturnTypeWillChange]
 	public function count()
 	{
 		return $this->total_rows;
 	}
 
+
 	/**
 	 * ArrayAccess: offsetExists
 	 */
+	#[\ReturnTypeWillChange]
 	public function offsetExists($offset)
 	{
-		if ($this->total_rows > 0)
-		{
+		if ($this->total_rows > 0) {
 			$min = 0;
 			$max = $this->total_rows - 1;
 
-			return ! ($offset < $min OR $offset > $max);
+			return ! ($offset < $min or $offset > $max);
 		}
 
 		return FALSE;
 	}
 
+
 	/**
 	 * ArrayAccess: offsetGet
 	 */
+	#[\ReturnTypeWillChange]
 	public function offsetGet($offset)
 	{
-		if ( ! $this->seek($offset))
+		if (! $this->seek($offset))
 			return FALSE;
 
-		// Return the row by calling the defined fetching callback
 		return call_user_func($this->fetch_type, $this->result, $this->return_type);
 	}
 
@@ -614,70 +585,61 @@ abstract class Database_Result implements ArrayAccess, Iterator, Countable {
 	 *
 	 * @throws  Kohana_Database_Exception
 	 */
+	#[\ReturnTypeWillChange]
 	final public function offsetSet($offset, $value)
 	{
 		throw new Kohana_Database_Exception('database.result_read_only');
 	}
+
 
 	/**
 	 * ArrayAccess: offsetUnset
 	 *
 	 * @throws  Kohana_Database_Exception
 	 */
+	#[\ReturnTypeWillChange]
 	final public function offsetUnset($offset)
 	{
 		throw new Kohana_Database_Exception('database.result_read_only');
 	}
 
-	/**
-	 * Iterator: current
-	 */
+
+	#[\ReturnTypeWillChange]
 	public function current()
 	{
 		return $this->offsetGet($this->current_row);
 	}
 
-	/**
-	 * Iterator: key
-	 */
+	#[\ReturnTypeWillChange]
 	public function key()
 	{
 		return $this->current_row;
 	}
 
-	/**
-	 * Iterator: next
-	 */
+	#[\ReturnTypeWillChange]
 	public function next()
 	{
 		++$this->current_row;
 		return $this;
 	}
 
-	/**
-	 * Iterator: prev
-	 */
+	#[\ReturnTypeWillChange]
 	public function prev()
 	{
 		--$this->current_row;
 		return $this;
 	}
 
-	/**
-	 * Iterator: rewind
-	 */
+	#[\ReturnTypeWillChange]
 	public function rewind()
 	{
 		$this->current_row = 0;
 		return $this;
 	}
 
-	/**
-	 * Iterator: valid
-	 */
+	#[\ReturnTypeWillChange]
 	public function valid()
 	{
 		return $this->offsetExists($this->current_row);
 	}
-
 } // End Database Result Interface
